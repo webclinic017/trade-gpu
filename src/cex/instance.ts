@@ -65,8 +65,7 @@ export default class Cex {
     })
   }
 
-  private toShortOrder(raw: any)
-  : ShortOrder {
+  private toShortOrder(raw: any): ShortOrder {
     const obj: any = {};
     ["id", "type", "symbol1", "symbol2"].forEach(k => obj[k] = raw[k]);
     ["time"].forEach(k => obj[k] = parseInt(raw[k] || 0));
@@ -74,61 +73,49 @@ export default class Cex {
     return obj;
   }
 
-  private wrap<TYPE>(promise:Promise<TYPE>)
-  : Promise<TYPE> {
+  private wrap<TYPE>(promise:Promise<TYPE>): Promise<TYPE> {
     return new Promise((resolve, reject) => {
       promise.then(d => setTimeout(() => resolve(d), 1500))
       .catch(err => setTimeout(() => reject(err), 1500));
     })
   }
 
-  open_orders()
-  : Promise<ShortOrder[]> {
-    return this.wrap(this.cexAuth.open_orders(null)
-    .then((result:any) => {
-      if(result && result.length > 0) return result.map(o => this.toShortOrder(o));
-      return [];
-    }));
+  open_orders = async (): Promise<ShortOrder[]> => {
+    const result: any[] = await this.wrap(this.cexAuth.open_orders(null));
+    if(result && result.length > 0) return result.map(o => this.toShortOrder(o));
+    return [];
   }
 
-  place_order(left: Devise, right: Devise, type: OrderType, amount: number, price: number)
-  : Promise<ShortOrder> {
-    return this.wrap(this.cexAuth.place_order(left+"/"+right, type, amount, price, null)
-    ).then((d: any) => this.toShortOrder(d));
+  place_order = async (left: Devise, right: Devise, type: OrderType, amount: number, price: number): Promise<ShortOrder> => {
+    const order = await this.wrap(this.cexAuth.place_order(left+"/"+right, type, amount, price, null));
+    return this.toShortOrder(order);
   }
 
-  cancel_order(id: string)
-  : Promise<boolean> {
-    return this.wrap(this.cexAuth.cancel_order(id).then((r:any) => !!r));
+  cancel_order = async (id: string): Promise<boolean> => {
+    return !!(await this.wrap(this.cexAuth.cancel_order(id)));
   }
 
-  account_balance()
-  : Promise<AccountBalance> {
-    return this.wrap(this.cexAuth.account_balance()
-    .then((result:any) => {
-      var object: AccountBalance = {
-        timestamp: parseInt(result.timestamp),
-        ETH: { available: new BigNumber(0), orders: new BigNumber(0) },
-        EUR: { available: new BigNumber(0), orders: new BigNumber(0) },
-        USD: { available: new BigNumber(0), orders: new BigNumber(0) },
-        BTC: { available: new BigNumber(0), orders: new BigNumber(0) }
-      };
+  account_balance = async (): Promise<AccountBalance> => {
+    const result: any = await this.wrap(this.cexAuth.account_balance());
+    var object: AccountBalance = {
+      timestamp: parseInt(result.timestamp),
+      ETH: { available: new BigNumber(0), orders: new BigNumber(0) },
+      EUR: { available: new BigNumber(0), orders: new BigNumber(0) },
+      USD: { available: new BigNumber(0), orders: new BigNumber(0) },
+      BTC: { available: new BigNumber(0), orders: new BigNumber(0) }
+    };
 
-      this.setAvailableOrders(result, object);
-      return object;
-    }));
+    this.setAvailableOrders(result, object);
+    return object;
   }
 
-  ticker(left: Devise, right: Devise)
-  : Promise<Ticker> {
-    return this.wrap(this.cexAuth.ticker(left+"/"+right)
-    .then((result:any) => {
-      const obj: any = { pair: result.pair };
-      ["timestamp", "low", "high", "last", "volume",
-        "volume30d", "bid", "ask", "priceChange",
-        "priceChangePercentage"].forEach(k => obj[k] = new BigNumber(result[k]));
+  ticker = async (left: Devise, right: Devise): Promise<Ticker> => {
+    const result: any = await this.wrap(this.cexAuth.ticker(left+"/"+right));
+    const obj: any = { pair: result.pair };
+    ["timestamp", "low", "high", "last", "volume",
+      "volume30d", "bid", "ask", "priceChange",
+      "priceChangePercentage"].forEach(k => obj[k] = new BigNumber(result[k]));
 
-        return obj;    
-    }));
+    return obj;    
   }
 }

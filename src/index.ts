@@ -18,19 +18,30 @@ const decimals: DeviseConfig[] = [{
 const devises: Map<Devise, DeviseConfig> = new Map<Devise, DeviseConfig>();
 decimals.forEach(d => devises.set(d.name, d));
 
-const tradeConfig: TradeConfig = {
-  from: "EUR",
-  to: "ETH",
-  buy_coef: 0.995,
-  sell_coef: 1.015
-};
+const configs: TradeConfig[] = [
+  {
+    from: "EUR",
+    to: "ETH",
+    buy_coef: 0.995,
+    sell_coef: 1.015,
+    maximum_price_change_percent: 5,
+    maximum_balance_used: 200
+  }
+];
 
-const tradeEngine = new TradeEngine(devises, tradeConfig, tickHolder, ordersHolders);
+const tradeEngine = new TradeEngine(devises, configs, tickHolder, ordersHolders);
 
-tickHolder.register("EUR", "ETH");
-tickHolder.register("EUR", "BTC");
-tickHolder.register("USD", "ETH");
-tickHolder.register("USD", "BTC");
+
+const ticks: [Devise, Devise][] = [
+  [ "EUR", "ETH" ],
+  [ "EUR", "BTC" ],
+  [ "USD", "ETH" ],
+  [ "USD", "BTC" ]
+];
+
+ticks.forEach(tuple => tickHolder.register(tuple[0], tuple[1]));
+
+
 tickHolder.start()
 .then(() => {
   console.log("trade engine starting...");

@@ -1,4 +1,4 @@
-import Cex from "../cex/instance";
+import Cex, { Devise } from "../cex/instance";
 import { Database } from "../database";
 import Order from "../database/models/order";
 
@@ -26,48 +26,41 @@ export default class Orders {
     this._list = [];
   }
 
-  list(): Promise<Order[]> {
-    return this.internalList()
-    .then(list => {
-      return Cex.instance.open_orders()
-      .then(shortOrders => {
-        const obtainedOrders = shortOrders.map(o => Order.from(o));
-        const new_orders = obtainedOrders.filter(o => !o.isIn(this._list));
-        const to_save: Order[] = [];
+  list = async (from: Devise, to: Devise): Promise<Order[]> => {
+    const list = await this.internalList(from, to);
+    const shortOrders = await Cex.instance.open_orders();
 
-        new_orders.forEach(o => o.completed = false);
-        this._list.forEach(o => !o.completed && !o.isIn(obtainedOrders) && to_save.push(o));
-        to_save.forEach(o => o.completed = true);
+    const obtainedOrders = shortOrders.map(o => Order.from(o));
+    const new_orders = obtainedOrders.filter(o => !o.isIn(this._list));
+    const to_save: Order[] = [];
 
-        (to_save.length > 0) && console.log("order finished !", to_save);
-        (new_orders.length > 0) && console.log("order new !", new_orders);
+    new_orders.forEach(o => o.completed = false);
+    this._list.forEach(o => !o.completed && !o.isIn(obtainedOrders) && to_save.push(o));
+    to_save.forEach(o => o.completed = true);
 
-        if(new_orders.length > 0) {
-          return Promise.all(to_save.map(o => o.save(this.database)))
-          .then(() => Promise.all(new_orders.map(o => o.save(this.database))))
-          .then((orders: Order[]) => {
-            console.log("saved", orders);
-            orders.forEach(o => this._list.push(o));
-            return this.internalList();
-          })
-        } else {
-          return Promise.all(to_save.map(o => o.save(this.database)))
-          .then(() => this.internalList());
-        }
-      })
-    });
+    (to_save.length > 0) && console.log("order finished !", to_save);
+    (new_orders.length > 0) && console.log("order new !", new_orders);
+
+    if(new_orders.length > 0) {
+      await Promise.all(to_save.map(o => o.save(this.database)))
+      const orders = await Promise.all(new_orders.map(o => o.save(this.database)))
+      console.log("saved", orders);
+      orders.forEach(o => this._list.push(o));
+    } else {
+      await Promise.all(to_save.map(o => o.save(this.database)));
+    }
+
+    return this.internalList(from, to);
   }
 
-  private internalList() {
-    if(this.loaded) return Promise.resolve(this._list);
+  private internalList = async (from: Devise, to: Devise) => {
+    if(this.loaded) return this._list.filter(order => order.left == to && order.right == from);
     else {
-      return Order.list(this.database)
-      .then(list => {
-        this.loaded = true;
-        this._list = list;
-        //this._to_complete = this._list.filter(o => !o.completed);
-        return list;
-      })
+      const list = await Order.list(this.database)
+      this.loaded = true;
+      this._list = list;
+      //this._to_complete = this._list.filter(o => !o.completed);
+      return list.filter(order => order.left == to && order.right == from); //from = FIAT and to = CRYPTO for instance
     }
   }
 }
