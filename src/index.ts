@@ -11,6 +11,12 @@ const decimals: DeviseConfig[] = [{
   name: "EUR",
   decimals: 2
 }, {
+  name: "XRP",
+  decimals: 2
+}, {
+  name: "LTC",
+  decimals: 4 
+}, {
   name: "ETH",
   decimals: 4
 }];
@@ -26,6 +32,20 @@ const configs: TradeConfig[] = [
     sell_coef: 1.015,
     maximum_price_change_percent: 5,
     maximum_balance_used: 200
+  }, {
+    from: "EUR",
+    to: "XRP",
+    buy_coef: 0.995,
+    sell_coef: 1.015,
+    maximum_price_change_percent: 5,
+    maximum_balance_used: 60
+  }, {
+    from: "EUR",
+    to: "LTC",
+    buy_coef: 0.995,
+    sell_coef: 1.015,
+    maximum_price_change_percent: 5,
+    maximum_balance_used: 60
   }
 ];
 
@@ -34,9 +54,13 @@ const tradeEngine = new TradeEngine(devises, configs, tickHolder, ordersHolders)
 
 const ticks: [Devise, Devise][] = [
   [ "EUR", "ETH" ],
+  [ "EUR", "XRP" ],
   [ "EUR", "BTC" ],
+  [ "EUR", "LTC" ],
   [ "USD", "ETH" ],
-  [ "USD", "BTC" ]
+  [ "USD", "BTC" ],
+  [ "USD", "XRP" ],
+  [ "USD", "LTC" ]
 ];
 
 ticks.forEach(tuple => tickHolder.register(tuple[0], tuple[1]));

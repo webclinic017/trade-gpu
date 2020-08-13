@@ -6,7 +6,9 @@ export type OrderType = "buy"|"sell";
 export type Devise = "EUR"
 | "USD"
 | "BTC"
-| "ETH";
+| "ETH"
+| "XRP"
+| "LTC";
 
 export interface AccountBalance {
   timestamp: number,
