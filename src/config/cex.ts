@@ -1,6 +1,9 @@
 import dotenv from "dotenv";
 
-const result = dotenv.config();
+var result = dotenv.config();
+if(process.env.CONFIG_PATH) {
+  result = dotenv.config({ path: process.env.CONFIG_PATH });
+}
 
 const json = {
   clientId: process.env.CEX_CLIENT_ID,
