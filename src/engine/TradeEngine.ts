@@ -73,7 +73,10 @@ export default class TradeEngine {
         return true;
       }
 
-    
+      if(tick.priceChangePercentage && tick.priceChangePercentage.isGreaterThan(config.maximum_price_change_percent)) {
+        throw`The price change % is > than ${config.maximum_price_change_percent}% - stopping`;
+      }
+
       //get the account balance
       const balance = await Cex.instance.account_balance()
       const from = balance[config.from];
@@ -85,12 +88,6 @@ export default class TradeEngine {
 
       if(from_balance.isGreaterThan(config.maximum_balance_used)) {
         from_balance = new BigNumber(config.maximum_balance_used);
-      }
-
-      console.log("from_balance", from_balance);
-
-      if(tick.priceChangePercentage && tick.priceChangePercentage.isGreaterThan(config.maximum_price_change_percent)) {
-        throw`The price change % is > than ${config.maximum_price_change_percent}% - stopping`;
       }
 
       var last_order: Order|null = orders && orders.length > 0 ? orders.reduce((left, right) => {
