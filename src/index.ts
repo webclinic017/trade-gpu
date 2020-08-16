@@ -19,6 +19,9 @@ const decimals: DeviseConfig[] = [{
 }, {
   name: "ETH",
   decimals: 4
+}, {
+  name: "DASH",
+  decimals: 2
 }];
 
 const devises: Map<Devise, DeviseConfig> = new Map<Devise, DeviseConfig>();
@@ -46,24 +49,32 @@ const configs: TradeConfig[] = [
     sell_coef: 1.015,
     maximum_price_change_percent: 5,
     maximum_balance_used: 60
+  }, {
+    from: "EUR",
+    to: "BCH",
+    buy_coef: 0.995,
+    sell_coef: 1.015,
+    maximum_price_change_percent: 5,
+    maximum_balance_used: 60
+  }, {
+    from: "EUR",
+    to: "DASH",
+    buy_coef: 0.995,
+    sell_coef: 1.015,
+    maximum_price_change_percent: 5,
+    maximum_balance_used: 60
   }
 ];
 
 const tradeEngine = new TradeEngine(devises, configs, tickHolder, ordersHolders);
 
+const watch: Devise[] = [ "ETH", "XRP", "BTC", "LTC", "BCH", "DASH" ];
 
-const ticks: [Devise, Devise][] = [
-  [ "EUR", "ETH" ],
-  [ "EUR", "XRP" ],
-  [ "EUR", "BTC" ],
-  [ "EUR", "LTC" ],
-  [ "USD", "ETH" ],
-  [ "USD", "BTC" ],
-  [ "USD", "XRP" ],
-  [ "USD", "LTC" ]
-];
-
-ticks.forEach(tuple => tickHolder.register(tuple[0], tuple[1]));
+[
+  ...watch.map(crypto => (["EUR", crypto]) as [Devise, Devise]),
+  ...watch.map(crypto => (["USD", crypto]) as [Devise, Devise]),
+]
+.forEach(tuple => tickHolder.register(tuple[0], tuple[1]));
 
 
 tickHolder.start()
