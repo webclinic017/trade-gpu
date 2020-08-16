@@ -53,7 +53,10 @@ export default class TradeEngine {
       const tick = results[0];
       var orders = results[1] || [];
 
+      if(!tick) return false;
+
       var price = tick.last;
+      if(!price) return false;
     
       const current = orders.filter(o => !o.completed);
     
@@ -71,10 +74,6 @@ export default class TradeEngine {
         }
         console.log(current.map(o=>o.str()).join("\n"));
         return true;
-      }
-
-      if(tick.priceChangePercentage && tick.priceChangePercentage.isGreaterThan(config.maximum_price_change_percent)) {
-        throw`The price change % is > than ${config.maximum_price_change_percent}% - stopping`;
       }
 
       //get the account balance
@@ -99,26 +98,10 @@ export default class TradeEngine {
       const last_was_sell_ok = last_was_ok && last_order && last_order.type == "sell";
       const last_was_buy_ok = last_was_ok && last_order && last_order.type == "buy";
 
-      if(tick && price && (to_balance.isLessThan(0.1) || last_was_sell_ok)) {
-        console.log("we buy !");
-        var average = tick.high.plus(tick.low.multipliedBy(1)).dividedBy(2); //avg(high, low)
-        average = average.plus(price).dividedBy(2); //avg(price, avg(high, low))
+      const priceToSell = price?.multipliedBy(config.sell_coef);
+      const totalExpectedAfterSell = to_balance.multipliedBy(priceToSell).toFixed();
 
-        const priceToBuy = average.multipliedBy(config.buy_coef);
-        const amount = from_balance.multipliedBy(0.99).dividedBy(priceToBuy);
-        console.log(`buy at price ${priceToBuy.toFixed()} (${tick.low.toFixed()}/${tick.high.toFixed()})`);
-        console.log("buying " + amount.decimalPlaces(2).toFixed()+" at price " + priceToBuy.decimalPlaces(2).toFixed());
-
-        if(amount.isGreaterThan(0.05) && priceToBuy.isLessThanOrEqualTo(price)) {
-          await Cex.instance.place_order(config.to, config.from, "buy", amount.decimalPlaces(2).toNumber(), priceToBuy.decimalPlaces(2).toNumber());
-          
-          orders = await this.ordersHolders.list(config.from, config.to);
-          console.log("now orders := ", orders.map(o => o.str()));
-          return true;
-        } else {
-          throw "ERROR : amount := " + amount.toFixed()+" priceToBuy := "+priceToBuy.toFixed();
-        }
-      } else {
+      if(to_balance.isGreaterThan(0.1) && totalExpectedAfterSell > 20) { //in from
         console.log("we sell !, count(orders) := " + orders.length);
         if(last_order) {
           if(last_order && "sell" == last_order.type) {
@@ -128,21 +111,36 @@ export default class TradeEngine {
 
           //TODO recalculate price to buy from above
           /*if(!price || last_order.price.isGreaterThan(price))*/ price = last_order.price;
-          console.log(`set price at ${price.toNumber()} (last ${last_order.price.toNumber()})`);
         }
 
-        const priceToSell = price?.multipliedBy(config.sell_coef);
-
-        console.log("sell at price ", priceToSell?.toFixed())
         if(!priceToSell) return false;
 
         const balance_to_use = to_balance.multipliedBy(0.99);
-        console.log("selling " + balance_to_use.decimalPlaces(2).toFixed()+" at price " + priceToSell.decimalPlaces(2).toFixed());
         await Cex.instance.place_order(config.to, config.from, "sell", balance_to_use.decimalPlaces(2).toNumber(), priceToSell.decimalPlaces(2).toNumber());
         
         orders = await this.ordersHolders.list(config.from, config.to);
         console.log("now orders := ", orders.map(o => o.str()));
         return true;
+      } else {
+        if(tick.priceChangePercentage && tick.priceChangePercentage.isGreaterThan(config.maximum_price_change_percent)) {
+          throw`The price change ${tick.priceChangePercentage.toFixed()}% is > than ${config.maximum_price_change_percent}% - stopping`;
+        }
+        console.log("we buy !" + tick.high.toFixed() + " " +tick.low.toFixed() + price.toFixed());
+        var average = tick.high.plus(tick.low.multipliedBy(1)).dividedBy(2); //avg(high, low)
+        average = average.plus(price).dividedBy(2); //avg(price, avg(high, low))
+
+        const priceToBuy = average.multipliedBy(config.buy_coef);
+        const amount = from_balance.multipliedBy(0.99).dividedBy(priceToBuy);
+
+        if(amount.isGreaterThan(0.05) && priceToBuy.isLessThanOrEqualTo(price)) {
+          await Cex.instance.place_order(config.to, config.from, "buy", amount.decimalPlaces(2).toNumber(), priceToBuy.decimalPlaces(2).toNumber());
+          
+          orders = await this.ordersHolders.list(config.from, config.to);
+          console.log("now orders := ", orders.map(o => o.str()));
+          return true;
+        } else {
+          throw "ERROR : amount := " + amount.toFixed()+" priceToBuy := "+priceToBuy.toFixed()+" "+price.toFixed();
+        }
       }
     } catch(err) {
       console.error(err);
