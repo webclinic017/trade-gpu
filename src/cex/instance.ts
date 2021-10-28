@@ -44,6 +44,7 @@ export interface Ticker {
   priceChangePercentage: BigNumber,
   pair: string
 }
+const RETRIES = 3;
 
 export default class Cex {
 
@@ -91,8 +92,21 @@ export default class Cex {
   }
 
   place_order = async (left: Devise, right: Devise, type: OrderType, amount: number, price: number): Promise<ShortOrder> => {
-    const order = await this.wrap(this.cexAuth.place_order(left+"/"+right, type, amount, price, null));
-    return this.toShortOrder(order);
+    //will try at most 3 times in case of connection reset
+    return this.place_order_check(left, right, type, amount, price, RETRIES);
+  }
+
+  private async place_order_check(left: Devise, right: Devise, type: OrderType, amount: number, price: number, number_retry: number): Promise<ShortOrder> {
+    try {
+      const order = await this.wrap(this.cexAuth.place_order(left+"/"+right, type, amount, price, null));
+      return this.toShortOrder(order);
+    } catch(e) {
+      const error = `${e}`;
+      if(!number_retry || number_retry < 0 || !(error.indexOf("CONN") >= 0)) throw e;
+      const retries = number_retry - 1;
+      await this.wait((RETRIES - retries) * 1000);
+      return await this.place_order_check(left, right, type, amount, price, retries);
+    }
   }
 
   cancel_order = async (id: string): Promise<boolean> => {
@@ -111,6 +125,15 @@ export default class Cex {
 
     this.setAvailableOrders(result, object);
     return object;
+  }
+
+  private async wait(time: number): Promise<void> {
+    if(time <= 0) return;
+
+    return new Promise((resolve) => {
+      console.log(`waiting for ${time}ms`);
+      setTimeout(() => resolve(), time);
+    })
   }
 
   ticker = async (left: Devise, right: Devise): Promise<Ticker> => {
