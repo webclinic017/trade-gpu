@@ -141,15 +141,38 @@ export default class TradeEngine {
 
         if(!priceToSell) return false;
 
-        const balance_to_use = to_balance.multipliedBy(0.97);
+        // creating an instance of big number which will ceil (round to the higher decimal number)
+        const BigNumberCeil = BigNumber.clone({ ROUNDING_MODE: BigNumber.ROUND_CEIL});
+
+        //clone the original price to sell
+        const priceWhichWhillCeil = new BigNumberCeil(priceToSell);
+        const balance_to_use = to_balance; //.multipliedBy(0.99);
+        //calculate the amount of element to consume
         const amount = balance_to_use.decimalPlaces(this.decimals(config.to)).toNumber();
-        const placePrice = priceToSell.decimalPlaces(this.decimals(config.from)).toNumber();
-        console.log(`amount ? ${amount} / placePrice ? ${placePrice}`);
-        await Cex.instance.place_order(config.to, config.from, "sell", amount, placePrice);
-        
-        orders = await this.ordersHolders.list(config.from, config.to);
-        console.log("now orders := ", orders.map(o => o.str()));
-        return true;
+
+        //using the config.to's decimal price -> will still be using a decimal of 'from'
+        var number_decimals_price = this.decimalsPrice(config.to);
+
+        while(number_decimals_price >= 0) {
+          try {
+            // send the request
+            const placePrice = priceWhichWhillCeil.decimalPlaces(number_decimals_price).toNumber();
+            console.log(`amount ? ${amount} / placePrice ? ${placePrice}`);
+            await Cex.instance.place_order(config.to, config.from, "sell", amount, placePrice);
+
+            orders = await this.ordersHolders.list(config.from, config.to);
+            console.log("now orders := ", orders.map(o => o.str()));
+
+            return true;
+          } catch(e) {
+            if(`${e}`.indexOf("Invalid price") < 0 || number_decimals_price == 0) throw e;
+
+            console.log("Error with price, trying less decimals");
+            number_decimals_price --;
+          }
+        }
+
+        throw "out of the loop without either error or request sent... ?";
       } else {
         if(tick.priceChangePercentage && tick.priceChangePercentage.isGreaterThan(config.maximum_price_change_percent)) {
           throw`The price change ${tick.priceChangePercentage.toFixed()}% is > than ${config.maximum_price_change_percent}% - stopping`;
