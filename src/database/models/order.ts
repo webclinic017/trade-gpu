@@ -63,6 +63,18 @@ export default class Order extends Model {
     return super.save(database) as any;
   }
 
+  json(): any {
+    const object: any = {};
+    Object.keys(this).forEach(k => {
+      if(this[k]?.constructor?.name == "BigNumber") {
+        object[k] = (this[k] as BigNumber).toNumber();
+      } else {
+        object[k] = this[k];
+      }
+    });
+    return object;
+  }
+
   pairs(): ([string, any, boolean?])[] {
     return [
       ["txid", this.txid, true],
