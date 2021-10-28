@@ -3,21 +3,27 @@ import CEX from 'cexio-api-node';
 import BigNumber from "bignumber.js";
 
 export type OrderType = "buy"|"sell";
-export type Devise = "EUR"
-| "USD"
-| "BTC"
-| "BCH"
-| "ETH"
-| "XRP"
-| "LTC"
-| "DASH";
+
+export const DeviseNames = ["EUR", "USD", "BTC", "BCH", "ETH", "XRP", "LTC", "DASH", "DOGE", "ADA", "SHIB"] as const;
+
+type DeviseReadOnly = typeof DeviseNames
+type ElementType < T extends ReadonlyArray < unknown > > = T extends ReadonlyArray<
+  infer ElementType
+>
+  ? ElementType
+  : never
+
+export type Devise = ElementType<typeof DeviseNames>
+
+export interface AccountBalanceValue {
+  available: BigNumber, orders: BigNumber
+}
+
+type record = Record<Devise, AccountBalanceValue>
 
 export interface AccountBalance {
   timestamp: number,
-  ETH: { available: BigNumber, orders: BigNumber },
-  USD: { available: BigNumber, orders: BigNumber },
-  BTC: { available: BigNumber, orders: BigNumber },
-  EUR: { available: BigNumber, orders: BigNumber }
+  balances: record
 }
 
 export interface ShortOrder {
@@ -58,16 +64,20 @@ export default class Cex {
     return new BigNumber(str || "0");
   }
 
-  setAvailableOrders(objIn: any, objOut: any): void {
-    Object.keys(objIn).forEach(key => {
-      const value = objIn[key];
+  setAvailableOrders(objIn: any, objOut: record): void {
+    const keys_in_objIn = Object.keys(objIn);
+
+    DeviseNames.forEach(name => {
+      if(!keys_in_objIn.includes(name)) console.error("Invalid name, not found in the keys: " + name, keys_in_objIn);
+
+      const value = objIn[name];
       if(value && value.available && value.orders) {
-        objOut[key] = {
+        objOut[name] = {
           available: new BigNumber(value.available),
           orders: new BigNumber(value.orders) 
         }
       }
-    })
+    });
   }
 
   private toShortOrder(raw: any): ShortOrder {
@@ -117,13 +127,13 @@ export default class Cex {
     const result: any = await this.wrap(this.cexAuth.account_balance());
     var object: AccountBalance = {
       timestamp: parseInt(result.timestamp),
-      ETH: { available: new BigNumber(0), orders: new BigNumber(0) },
-      EUR: { available: new BigNumber(0), orders: new BigNumber(0) },
-      USD: { available: new BigNumber(0), orders: new BigNumber(0) },
-      BTC: { available: new BigNumber(0), orders: new BigNumber(0) }
+      balances: {} as record
     };
 
-    this.setAvailableOrders(result, object);
+    //take every Devises
+    DeviseNames.forEach(value => object.balances[value] = { available: new BigNumber(0), orders: new BigNumber(0) })
+
+    this.setAvailableOrders(result, object.balances);
     return object;
   }
 
