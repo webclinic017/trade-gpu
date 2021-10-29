@@ -167,8 +167,8 @@ export default class TradeEngine {
           } catch(e) {
             if(`${e}`.indexOf("Invalid price") < 0 || number_decimals_price == 0) throw e;
 
-            console.log("Error with price, trying less decimals");
             number_decimals_price --;
+            console.log("Error with price, trying less decimals", number_decimals_price);
           }
         }
 
@@ -221,15 +221,31 @@ export default class TradeEngine {
 
         //get the final amount, floor to the maximum number of decimals to use => floor is ok, even in worst cases, it will be using less balance than expected
         const final_amount = amount.decimalPlaces(this.decimals(config.to)).toNumber();
-        //get the final price, floor to the maximum number of decimals to use => floor is ok since it will still be lower than the expected price (lower is better)
-        const final_price_to_buy = priceToBuy.decimalPlaces(this.decimalsPrice(config.to)).toNumber();
-        console.log(`final_amount amount:${final_amount} final_price_to_buy ${final_price_to_buy}`);
 
-        await Cex.instance.place_order(config.to, config.from, "buy", final_amount, final_price_to_buy);
+
+        var number_decimals_price = this.decimalsPrice(config.to);
+
+        while(number_decimals_price >= 0) {
+          try {
+            // send the request
+            //get the final price, floor to the maximum number of decimals to use => floor is ok since it will still be lower than the expected price (lower is better)
+            const final_price_to_buy = priceToBuy.decimalPlaces(number_decimals_price).toNumber();
+            console.log(`final_amount amount:${final_amount} final_price_to_buy ${final_price_to_buy}`);
+
+            await Cex.instance.place_order(config.to, config.from, "buy", final_amount, final_price_to_buy);
         
-        orders = await this.ordersHolders.list(config.from, config.to);
-        console.log("now orders := ", orders.map(o => o.str()));
-        return true;
+            orders = await this.ordersHolders.list(config.from, config.to);
+            console.log("now orders := ", orders.map(o => o.str()));
+            return true;
+
+          } catch(e) {
+            if(`${e}`.indexOf("Invalid price") < 0 || number_decimals_price == 0) throw e;
+
+            number_decimals_price --;
+            console.log("Error with price, trying less decimals", number_decimals_price);
+          }
+        }
+        throw "out of the loop without either error or request sent... ?";
       }
     } catch(err) {
       console.error(`having ${err}`, err);
