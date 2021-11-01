@@ -4,9 +4,8 @@ import BigNumber from "bignumber.js";
 
 export type OrderType = "buy"|"sell";
 
-export const DeviseNames = ["EUR", "USD", "BTC", "BCH", "ETH", "XRP", "LTC", "DASH", "DOGE", "ADA", "SHIB"] as const;
+export const DeviseNames = ["EUR", "USD", "BTC", "BCH", "ETH", "XRP", "LTC", "DASH", "DOGE", "ADA", "SHIB", "MANA"] as const;
 
-type DeviseReadOnly = typeof DeviseNames
 type ElementType < T extends ReadonlyArray < unknown > > = T extends ReadonlyArray<
   infer ElementType
 >
@@ -17,6 +16,40 @@ export type Devise = ElementType<typeof DeviseNames>
 
 export interface AccountBalanceValue {
   available: BigNumber, orders: BigNumber
+}
+
+interface CurrencyLimitAPI {
+  symbol1: string,
+  symbol2: string,
+  pricePrecision: number,
+  minLotSize: number,
+  minLotSizeS2: number,
+  minPrice: number,
+  maxPrice: number
+}
+
+export interface CurrencyLimit {
+  from: string, //symbol2
+  to: string, //symbol1
+  pricePrecision: number,
+  minimumSizeTo: BigNumber,
+  minimumSizeFrom: BigNumber,
+  minPrice: BigNumber,
+  maxPrice: BigNumber
+}
+
+function toCurrencyLimit(object: CurrencyLimitAPI): CurrencyLimit {
+  if(!object) throw "invalid object " + JSON.stringify(object);
+  if(!object) throw "invalid object " + JSON.stringify(object);
+  const { symbol1, symbol2, pricePrecision, minLotSize, minLotSizeS2, minPrice, maxPrice } = object;
+  return {
+    from: symbol2,
+    to: symbol1,
+    pricePrecision: parseInt((<unknown>pricePrecision) as string),
+    minimumSizeTo: new BigNumber(minLotSize),
+    minimumSizeFrom: new BigNumber(minLotSizeS2),
+    minPrice: new BigNumber(minPrice), maxPrice: new BigNumber(maxPrice)
+  };
 }
 
 type record = Record<Devise, AccountBalanceValue>
@@ -95,7 +128,14 @@ export default class Cex {
     })
   }
 
-  open_orders = async (): Promise<ShortOrder[]> => {
+  public async currency_limits(): Promise<CurrencyLimit[]> {
+    const result: any = await this.wrap(this.cexAuth.currency_limits());
+
+    if(!result || !result.pairs || result.pairs.length == 0) throw "invalid configuration found for currency limits in CEX";
+    return result.pairs.map((p: CurrencyLimitAPI) => toCurrencyLimit(p));
+  }
+
+  public async open_orders(): Promise<ShortOrder[]> {
     const result: any[] = await this.wrap(this.cexAuth.open_orders(null));
     if(result && result.length > 0) return result.map(o => this.toShortOrder(o));
     return [];
@@ -112,18 +152,18 @@ export default class Cex {
       return this.toShortOrder(order);
     } catch(e) {
       const error = `${e}`;
-      if(!number_retry || number_retry < 0 || !(error.indexOf("CONN") >= 0)) throw e;
+      if(!number_retry || number_retry < 0 || !(error.indexOf("ESOCKETTIMEDOUT") >= 0)) throw e;
       const retries = number_retry - 1;
       await this.wait((RETRIES - retries) * 1000);
       return await this.place_order_check(left, right, type, amount, price, retries);
     }
   }
 
-  cancel_order = async (id: string): Promise<boolean> => {
+  public async cancel_order(id: string): Promise<boolean> {
     return !!(await this.wrap(this.cexAuth.cancel_order(id)));
   }
 
-  account_balance = async (): Promise<AccountBalance> => {
+  public async account_balance(): Promise<AccountBalance> {
     const result: any = await this.wrap(this.cexAuth.account_balance());
     var object: AccountBalance = {
       timestamp: parseInt(result.timestamp),
@@ -146,7 +186,7 @@ export default class Cex {
     })
   }
 
-  ticker = async (left: Devise, right: Devise): Promise<Ticker> => {
+  public async ticker (left: Devise, right: Devise): Promise<Ticker> {
     const result: any = await this.wrap(this.cexAuth.ticker(left+"/"+right));
     const obj: any = { pair: result.pair };
     ["timestamp", "low", "high", "last", "volume",

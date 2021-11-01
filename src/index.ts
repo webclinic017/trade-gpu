@@ -31,7 +31,7 @@ const decimals: DeviseConfig[] = [{
   name: "BTC",
   decimals: 5,
   decimals_price: 0,
-  minimum: 0.0001
+  minimum: 0.00001
 }, {
   name: "DOGE",
   decimals: 1,
@@ -42,9 +42,14 @@ const decimals: DeviseConfig[] = [{
   minimum: 0.01
 }, {
   name: "SHIB",
-  decimals: 2,
+  decimals: 0,
   decimals_price: 10,
-  minimum: 0.01
+  minimum: 1
+}, {
+  name: "MANA",
+  decimals: 0,
+  decimals_price: 10,
+  minimum: 1
 }];
 
 const devises: Map<Devise, DeviseConfig> = new Map<Devise, DeviseConfig>();
@@ -105,8 +110,15 @@ const configs: TradeConfig[] = [
     to: "SHIB",
     buy_coef: 0.995,
     sell_coef: 1.028,
-    maximum_price_change_percent: 5,
+    maximum_price_change_percent: 20,
     maximum_balance_used: 200
+  }, {
+    from: "USD",
+    to: "MANA",
+    buy_coef: 0.985,
+    sell_coef: 1.028,
+    maximum_price_change_percent: 20,
+    maximum_balance_used: 60
   }
 ];
 

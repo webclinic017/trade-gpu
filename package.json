@@ -22,7 +22,6 @@
   },
   "homepage": "https://github.com/codlab/trader#readme",
   "dependencies": {
-    "@types/react": "^16.9.19",
     "@types/sqlite3": "^3.1.6",
     "bignumber.js": "^9.0.0",
     "cexio-api-node": "git+https://github.com/codlab/cexio-api-node.git",

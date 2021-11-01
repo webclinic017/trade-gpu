@@ -1,4 +1,4 @@
-import { Devise } from './../cex/instance';
+import { CurrencyLimit, Devise } from './../cex/instance';
 import { BigNumber } from 'bignumber.js';
 import Cex from "../cex/instance";
 import { Database } from "../database";
@@ -9,6 +9,10 @@ import Order from '../database/models/order';
 
 
 BigNumber.set({ DECIMAL_PLACES: 10, ROUNDING_MODE: BigNumber.ROUND_FLOOR });
+
+interface DeviseValue {
+  [key: string]: {expected_value: BigNumber, current_value: BigNumber};
+}
 
 export interface DeviseConfig {
   name: Devise,
@@ -29,9 +33,16 @@ export interface TradeConfig {
 export default class TradeEngine {
   private _callback: () => void = () => this._afterTickStarted();
   private _started: boolean;
+  private _currency_limits?: CurrencyLimit[];
 
   constructor(private devises: Map<Devise,DeviseConfig>, private configs: TradeConfig[], private tickHolder: TickHolder, private ordersHolders: Orders) {
     this._started = false;
+  }
+
+  public async load_configuration(): Promise<CurrencyLimit[]> {
+    if(this._currency_limits) return this._currency_limits;
+    this._currency_limits = await Cex.instance.currency_limits();
+    return this._currency_limits;
   }
 
   private database(): Database {
@@ -45,27 +56,51 @@ export default class TradeEngine {
     }
   }
 
-  private minimum(devise?: Devise) {
-    if(!devise) return 0.01;
-    const object = this.devises.get(devise);
-    if(!object) return 0.01;
-    return object.minimum || 0.01;
+  private currency(from?: Devise, to?: Devise): CurrencyLimit|null {
+    if(!this._currency_limits) throw "invalid configuration";
+
+    return this._currency_limits.find(cl => cl.from == from && cl.to == to) || null;
   }
 
   private decimals(devise?: Devise) {
     if(!devise) return 2;
     const object = this.devises.get(devise);
     if(!object) return 2;
-    return object.decimals || 2;
+    var { decimals } = object;
+    if(null === decimals || undefined === decimals) decimals = 0;
+    if(decimals < 0) decimals = 0;
+    return decimals;
   }
 
-  private decimalsPrice(devise?: Devise) {
-    if(!devise) return 2;
-    const object = this.devises.get(devise);
-    if(!object) return 2;
-    const decimals = object.decimals_price;
-    if(undefined !== decimals && null !== decimals) return decimals;
-    return object.decimals || 2;
+  private async expectedValue(config: TradeConfig): Promise<[BigNumber, BigNumber]> {
+    try {
+      const results = await Promise.all([
+        Tick.last(this.database(), config.to, config.from),
+        this.ordersHolders.list(config.from, config.to)
+      ]);
+
+      const configuration = this.currency(config.from, config.to);
+      if(!configuration) throw `couldn't load configuration for ${config.from} Ò-> ${config.to}`;
+
+      const tick = results[0];
+      var orders = results[1] || [];
+
+      if(!tick) throw "no tick";
+
+      var price = tick.last;
+      if(!price) throw "no last price";
+    
+      const current = orders.filter(o => !o.completed && o.type == "sell");
+
+      var expected_value = current.map(order => order.price.multipliedBy(order.amount))
+        .reduce((p, c) => p.plus(c), new BigNumber(0));
+
+      var current_value = current.map(order => tick.last.multipliedBy(order.amount))
+      .reduce((p, c) => p.plus(c), new BigNumber(0));
+      return [expected_value, current_value];
+    } catch(e) {
+      return [new BigNumber(0), new BigNumber(0)];
+    }
   }
 
   private _fullfillOrder = async (config: TradeConfig) => {
@@ -74,6 +109,9 @@ export default class TradeEngine {
         Tick.last(this.database(), config.to, config.from),
         this.ordersHolders.list(config.from, config.to)
       ]);
+
+      const configuration = this.currency(config.from, config.to);
+      if(!configuration) throw `couldn't load configuration for ${config.from} Ò-> ${config.to}`;
 
       const tick = results[0];
       var orders = results[1] || [];
@@ -105,6 +143,8 @@ export default class TradeEngine {
       const {balances} = await Cex.instance.account_balance()
       const from = balances[config.from];
       const to = balances[config.to];
+      //console.log("from", from);
+      //console.log("to", to);
       //console.log("account_balance " + balances[config.from].available.toFixed(), from);
       //console.log("account_balance " + balances[config.to].available.toFixed(), to);
 
@@ -127,7 +167,7 @@ export default class TradeEngine {
       const priceToSell = price?.multipliedBy(config.sell_coef);
       const totalExpectedAfterSell = to_balance.multipliedBy(priceToSell).toNumber();
 
-      if(to_balance.isGreaterThan(0.1) && totalExpectedAfterSell > 20) { //in from
+      if(to_balance.isGreaterThan(0.1) && to_balance.isGreaterThan(configuration.minimumSizeTo)) { //in from
         console.log("we sell !, count(orders) := " + orders.length);
         if(last_order) {
           if(last_order && "sell" == last_order.type) {
@@ -151,7 +191,7 @@ export default class TradeEngine {
         const amount = balance_to_use.decimalPlaces(this.decimals(config.to)).toNumber();
 
         //using the config.to's decimal price -> will still be using a decimal of 'from'
-        var number_decimals_price = this.decimalsPrice(config.to);
+        var number_decimals_price = configuration.pricePrecision;// this.decimalsPrice(config.to);
 
         while(number_decimals_price >= 0) {
           try {
@@ -195,10 +235,10 @@ export default class TradeEngine {
           priceToBuy = price.multipliedBy(0.95);
         }
 
-        priceToBuy = priceToBuy.decimalPlaces(this.decimalsPrice(config.to));
-        console.log(`will use price ${priceToBuy} -> maximum ${this.decimalsPrice(config.to)} decimals`);
+        priceToBuy = priceToBuy.decimalPlaces(configuration.pricePrecision);
+        console.log(`will use price ${priceToBuy} -> maximum ${configuration.pricePrecision} decimals`);
 
-        if(total.decimalPlaces(this.decimals(config.to)).toNumber() > 0) {
+        if(amount.isGreaterThan(0) && total.decimalPlaces(configuration.pricePrecision).toNumber() > 0) {
           const to_subtract = Math.pow(10, -this.decimals(config.to));
           console.log(`10^-${this.decimals(config.to)} = ${to_subtract}`);
           do {
@@ -209,10 +249,10 @@ export default class TradeEngine {
           console.log(`fixing amount:${amount.toFixed(this.decimals(config.to))} total:${total.toFixed(this.decimals(config.from))} total_balance:${total_balance}(${from_balance})`);
         }
 
-        const is_bigger_than_minimum = amount.comparedTo(this.minimum(config.to)) >= 0;
+        const is_bigger_than_minimum = amount.comparedTo(configuration.minimumSizeTo) >= 0;
 
         if(!is_bigger_than_minimum) {
-          throw `ERROR : amount := ${amount.toFixed()} is lower than the minimum := ${this.minimum(config.to)}`;
+          throw `ERROR : amount := ${amount.toFixed()} is lower than the minimum := ${configuration.minimumSizeTo}`;
         }
 
         if(total_balance.toNumber() <= 2) { //2€/usd etc
@@ -223,7 +263,7 @@ export default class TradeEngine {
         const final_amount = amount.decimalPlaces(this.decimals(config.to)).toNumber();
 
 
-        var number_decimals_price = this.decimalsPrice(config.to);
+        var number_decimals_price = configuration.pricePrecision;
 
         while(number_decimals_price >= 0) {
           try {
@@ -256,6 +296,31 @@ export default class TradeEngine {
 
   private _afterTickStarted = async () => {
     var i = 0;
+
+    await this.load_configuration();
+
+    const array: DeviseValue = {};
+    while( i < this.configs.length) {
+      const config = this.configs[i];
+      const { from, to } = config;
+      try {
+        const [expected_value, current_value] = await this.expectedValue(config);
+        if(!array[from]) array[from] = {expected_value: new BigNumber(0), current_value: new BigNumber(0)};
+        array[from].expected_value = array[from].expected_value.plus(expected_value)
+        array[from].current_value = array[from].current_value.plus(current_value)
+      } catch(e) {
+
+      }
+      i++;
+    }
+
+
+    Object.keys(array).forEach(k => {
+      const {expected_value, current_value} = array[k];
+      console.log(`managing for ${k} ; expected := ${expected_value.toNumber()} ; current := ${current_value}`)
+    });
+
+    i = 0;
     while( i < this.configs.length) {
       const config = this.configs[i];
       const { from, to } = config;
