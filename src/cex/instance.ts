@@ -4,7 +4,7 @@ import BigNumber from "bignumber.js";
 
 export type OrderType = "buy"|"sell";
 
-export const DeviseNames = ["EUR", "USD", "BTC", "BCH", "ETH", "XRP", "LTC", "DASH", "DOGE", "ADA", "SHIB", "MANA"] as const;
+export const DeviseNames = ["EUR", "USD", "BTC", "BCH", "ETH", "XRP", "LTC", "DASH", "DOGE", "ADA", "SHIB", "MANA", "TRX"] as const;
 
 type ElementType < T extends ReadonlyArray < unknown > > = T extends ReadonlyArray<
   infer ElementType

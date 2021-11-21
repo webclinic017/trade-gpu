@@ -20,6 +20,10 @@ const decimals: DeviseConfig[] = [{
   decimals: 2, //4,
   minimum: 0.01
 }, {
+  name: "TRX",
+  decimals: 2, //4,
+  minimum: 0.01
+}, {
   name: "ETH",
   decimals: 2, //4,
   minimum: 0.01
