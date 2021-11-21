@@ -114,7 +114,7 @@ export default class TradeEngine {
       if(!configuration) throw `couldn't load configuration for ${config.from} Ò-> ${config.to}`;
 
       const tick = results[0];
-      var orders = results[1] || [];
+      const orders = results[1] || [];
 
       if(!tick) return false;
 
@@ -155,64 +155,16 @@ export default class TradeEngine {
         from_balance = new BigNumber(config.maximum_balance_used);
       }
 
-      var last_order: Order|null = orders && orders.length > 0 ? orders.reduce((left, right) => {
-        if(left && !right) return left;
-        if(right && !left) return right;
-        return left.timestamp.isGreaterThan(right.timestamp) ? left : right;
-      }) : null;
-      const last_was_ok = last_order && last_order.completed;
-      const last_was_sell_ok = last_was_ok && last_order && last_order.type == "sell";
-      const last_was_buy_ok = last_was_ok && last_order && last_order.type == "buy";
+      const price_to_sell_current_tick = price?.multipliedBy(config.sell_coef) || new BigNumber(0);
+      const last_buy_complete = this.last(orders, "buy");
 
-      const priceToSell = price?.multipliedBy(config.sell_coef);
-      const totalExpectedAfterSell = to_balance.multipliedBy(priceToSell).toNumber();
+      if(to_balance.isGreaterThan(configuration.minimumSizeTo)) { //in from
+        console.log(`we sell !, count(orders) := ${orders.length} :: ` +
+          `${to_balance.toNumber()} is greater than ${configuration.minimumSizeTo.toNumber()}`);
+        const managed = await this.manageSellingOrder(config, configuration, to_balance, price_to_sell_current_tick, orders, last_buy_complete);
+        console.log("managed?", managed);
 
-      if(to_balance.isGreaterThan(0.1) && to_balance.isGreaterThan(configuration.minimumSizeTo)) { //in from
-        console.log("we sell !, count(orders) := " + orders.length);
-        if(last_order) {
-          if(last_order && "sell" == last_order.type) {
-            console.error(`INVALID LAST ODER, having := ${last_order.str()}`);
-            throw `INVALID LAST ODER, having := ${last_order.str()}`;
-          }
-
-          //TODO recalculate price to buy from above
-          /*if(!price || last_order.price.isGreaterThan(price))*/ //price = last_order.price;
-        }
-
-        if(!priceToSell) return false;
-
-        // creating an instance of big number which will ceil (round to the higher decimal number)
-        const BigNumberCeil = BigNumber.clone({ ROUNDING_MODE: BigNumber.ROUND_CEIL});
-
-        //clone the original price to sell
-        const priceWhichWhillCeil = new BigNumberCeil(priceToSell);
-        const balance_to_use = to_balance; //.multipliedBy(0.99);
-        //calculate the amount of element to consume
-        const amount = balance_to_use.decimalPlaces(this.decimals(config.to)).toNumber();
-
-        //using the config.to's decimal price -> will still be using a decimal of 'from'
-        var number_decimals_price = configuration.pricePrecision;// this.decimalsPrice(config.to);
-
-        while(number_decimals_price >= 0) {
-          try {
-            // send the request
-            const placePrice = priceWhichWhillCeil.decimalPlaces(number_decimals_price).toNumber();
-            console.log(`amount ? ${amount} / placePrice ? ${placePrice}`);
-            await Cex.instance.place_order(config.to, config.from, "sell", amount, placePrice);
-
-            orders = await this.ordersHolders.list(config.from, config.to);
-            console.log("now orders := ", orders.map(o => o.str()));
-
-            return true;
-          } catch(e) {
-            if(`${e}`.indexOf("Invalid price") < 0 || number_decimals_price == 0) throw e;
-
-            number_decimals_price --;
-            console.log("Error with price, trying less decimals", number_decimals_price);
-          }
-        }
-
-        throw "out of the loop without either error or request sent... ?";
+        return managed;
       } else {
         if(tick.priceChangePercentage && tick.priceChangePercentage.isGreaterThan(config.maximum_price_change_percent)) {
           throw`The price change ${tick.priceChangePercentage.toFixed()}% is > than ${config.maximum_price_change_percent}% - stopping`;
@@ -274,8 +226,8 @@ export default class TradeEngine {
 
             await Cex.instance.place_order(config.to, config.from, "buy", final_amount, final_price_to_buy);
         
-            orders = await this.ordersHolders.list(config.from, config.to);
-            console.log("now orders := ", orders.map(o => o.str()));
+            const new_orders = await this.ordersHolders.list(config.from, config.to);
+            console.log("new orders := ", new_orders.map(o => o.str()));
             return true;
 
           } catch(e) {
@@ -292,6 +244,66 @@ export default class TradeEngine {
     }
 
     return false;
+  }
+
+  private async manageSellingOrder(config: TradeConfig,
+    configuration: CurrencyLimit,
+    to_balance: BigNumber,
+    price_to_sell_current_tick: BigNumber,
+    orders: Order[],
+    last_buy_complete?: Order|null) {
+
+    if (!last_buy_complete) {
+      throw `Can't manage selling ${config.to} -> ${config.from}, no buy order is known`;
+    } else if("buy" != last_buy_complete.type) {
+      throw `INVALID, last order was not buy, having := ${last_buy_complete.str()}`;
+    }
+
+
+    const original_price = last_buy_complete.price.dividedBy(config.buy_coef);
+
+    if(original_price.isNaN()) throw "ERROR with nan result while trying to sell";
+    // we recompute the original price to get the actual expected sell_coef
+    const expected_price_to_sell = original_price.multipliedBy(config.sell_coef);
+    // and now we set the greater price - in case price dropped unexpectendly
+    const sell_price = price_to_sell_current_tick.isGreaterThan(expected_price_to_sell) ? price_to_sell_current_tick : expected_price_to_sell;
+    console.log("total expected devise  :=", to_balance.multipliedBy(sell_price).toNumber());
+    console.log("current  selling price :=", price_to_sell_current_tick.toNumber());
+    console.log("expected selling price :=", expected_price_to_sell.toNumber());
+
+
+    // creating an instance of big number which will ceil (round to the higher decimal number)
+    const BigNumberCeil = BigNumber.clone({ ROUNDING_MODE: BigNumber.ROUND_CEIL});
+
+    //clone the original price to sell
+    const priceWhichWhillCeil = new BigNumberCeil(sell_price);
+    const balance_to_use = to_balance; //.multipliedBy(0.99);
+    //calculate the amount of element to consume
+    const amount = balance_to_use.decimalPlaces(this.decimals(config.to)).toNumber();
+
+    //using the config.to's decimal price -> will still be using a decimal of 'from'
+    var number_decimals_price = configuration.pricePrecision;// this.decimalsPrice(config.to);
+
+    while(number_decimals_price >= 0) {
+      try {
+        // send the request
+        const placePrice = priceWhichWhillCeil.decimalPlaces(number_decimals_price).toNumber();
+        console.log(`amount ? ${amount} / placePrice ? ${placePrice}`);
+        await Cex.instance.place_order(config.to, config.from, "sell", amount, placePrice);
+
+        orders = await this.ordersHolders.list(config.from, config.to);
+        console.log("now orders := ", orders.map(o => o.str()));
+
+        return true;
+      } catch(e) {
+        if(`${e}`.indexOf("Invalid price") < 0 || number_decimals_price == 0) throw e;
+
+        number_decimals_price --;
+        console.log("Error with price, trying less decimals", number_decimals_price);
+      }
+    }
+
+    throw "out of the loop without either error or request sent... ?";
   }
 
   private _afterTickStarted = async () => {
@@ -330,5 +342,13 @@ export default class TradeEngine {
     }
 
     setTimeout(this._callback, 60000);
+  }
+
+  private last(orders: Order[], type: "sell"|"buy") {
+    return orders.filter(o => o.type == type).reduce((left: Order|null, right: Order) => {
+      if(!left) return right;
+      if(!right) return left;
+      return left.timestamp.isGreaterThan(right.timestamp) ? left : right;
+    }, null);
   }
 }
