@@ -13,14 +13,14 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/codlab/trader.git"
+    "url": "git+https://github.com/crypt0p1a/trade.git"
   },
   "author": "codlab",
-  "license": "MIT",
+  "license": "GPLv3",
   "bugs": {
-    "url": "https://github.com/codlab/trader/issues"
+    "url": "https://github.com/crypt0p1a/trade/issues"
   },
-  "homepage": "https://github.com/codlab/trader#readme",
+  "homepage": "https://github.com/crypt0p1a/trade#readme",
   "dependencies": {
     "@types/sqlite3": "^3.1.6",
     "bignumber.js": "^9.0.0",
