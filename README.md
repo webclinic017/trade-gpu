@@ -12,7 +12,7 @@
 ## Install
 
 ```sh
-npm install && npx tsc
+yarn install && npx tsc
 ```
 
 ## Usage
