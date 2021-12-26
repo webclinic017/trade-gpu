@@ -1,8 +1,6 @@
 import { Database } from '..';
 
-
 export default abstract class Model {
-
   private enabled: boolean = true;
 
   constructor(protected name: string, public id?: number) {
@@ -14,8 +12,8 @@ export default abstract class Model {
     this.enabled = !!enabled;
   }
 
-  pairs(): ([string, any, boolean?])[]  {
-    throw "to implement";
+  pairs(): [string, any, boolean?][] {
+    throw 'to implement';
   }
 
   protected setId(id: number): void {
@@ -24,10 +22,16 @@ export default abstract class Model {
 
   save(database: Database): Promise<Model> {
     return new Promise((resolve, reject) => {
-      database.save(this.name, this.pairs(), this.enabled, id => {
-        this.setId(id);
-        resolve(this);
-      }, this.id);
-    })
+      database.save(
+        this.name,
+        this.pairs(),
+        this.enabled,
+        id => {
+          this.setId(id);
+          resolve(this);
+        },
+        this.id,
+      );
+    });
   }
 }

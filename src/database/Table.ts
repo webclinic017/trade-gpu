@@ -13,30 +13,34 @@ export class Table {
   }
 
   public last(options?: string[]) {
-    if(options && options.length > 0) {
-      var columns = this.columns.map(c => c.name).join(",");
-      var whereColumns = options.map(c => c+"=?").join(" AND ");
-      return `SELECT ${columns} FROM ${this.name} WHERE ${whereColumns} ORDER BY id DESC LIMIT 1`; 
+    if (options && options.length > 0) {
+      var columns = this.columns.map(c => c.name).join(',');
+      var whereColumns = options.map(c => c + '=?').join(' AND ');
+      return `SELECT ${columns} FROM ${this.name} WHERE ${whereColumns} ORDER BY id DESC LIMIT 1`;
     } else {
-      var columns = this.columns.map(c => c.name).join(",");
-      return `SELECT ${columns} FROM ${this.name} ORDER BY id DESC LIMIT 1`; 
+      var columns = this.columns.map(c => c.name).join(',');
+      return `SELECT ${columns} FROM ${this.name} ORDER BY id DESC LIMIT 1`;
     }
   }
 
   public list() {
-    var columns = this.columns.map(c => c.name).join(",");
+    var columns = this.columns.map(c => c.name).join(',');
     return `SELECT ${columns} FROM ${this.name} ORDER BY id`;
   }
 
   public str() {
-    var text = `CREATE TABLE IF NOT EXISTS ${this.name} (`
-    text += this.columns.map(c => c.str()).join(",");
+    var text = `CREATE TABLE IF NOT EXISTS ${this.name} (`;
+    text += this.columns.map(c => c.str()).join(',');
     text += `)`;
     return text;
   }
 
   public indexes() {
-    return this.columns.filter(c => c.index)
-    .map(c => `CREATE INDEX IF NOT EXISTS idx_${this.name}_${c.name} ON ${this.name}(${c.name})`);
+    return this.columns
+      .filter(c => c.index)
+      .map(
+        c =>
+          `CREATE INDEX IF NOT EXISTS idx_${this.name}_${c.name} ON ${this.name}(${c.name})`,
+      );
   }
 }

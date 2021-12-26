@@ -1,4 +1,4 @@
-import { Options } from "./Options";
+import { Options } from './Options';
 
 export class Column {
   public name: string;
@@ -10,14 +10,15 @@ export class Column {
   constructor(name: string, type: string, options?: Options) {
     this.name = name;
     this.type = type;
-    this.nullable = !!(options?.nullable);
-    this.index = !!(options?.index);
-    this.increment = !!(options?.increment);
+    this.nullable = !!options?.nullable;
+    this.index = !!options?.index;
+    this.increment = !!options?.increment;
   }
 
   public str() {
-    const nullable = this.nullable ? "NULL" : "NOT NULL";
-    if(this.increment) return `${this.name} ${this.type} PRIMARY KEY AUTOINCREMENT`;
+    const nullable = this.nullable ? 'NULL' : 'NOT NULL';
+    if (this.increment)
+      return `${this.name} ${this.type} PRIMARY KEY AUTOINCREMENT`;
     return `${this.name} ${this.type} ${nullable}`;
   }
 }
