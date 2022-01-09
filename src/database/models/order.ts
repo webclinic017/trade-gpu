@@ -1,10 +1,13 @@
 import { BigNumber } from 'bignumber.js';
 import Model from './model';
-import { Database, Table, Column, Options } from '..';
+import {
+  Database, Table, Column, Options,
+} from '..';
 
 const table = new Table('orders');
 const row: [string, string, Options][] = [
   ['id', 'INTEGER', { increment: true }],
+  ['exchange', 'TEXT', { nullable: false }],
   ['txid', 'INTEGER', { nullable: false, index: true }],
   ['timeout', 'INTEGER', { nullable: false, index: true }],
   ['timestamp', 'INTEGER', { nullable: false, index: true }],
@@ -16,22 +19,26 @@ const row: [string, string, Options][] = [
   ['completed', 'INTEGER', { nullable: false }],
   ['right', 'INTEGER', { nullable: false, index: true }],
 ];
-row.forEach(row => table.add(new Column(row[0], row[1], row[2])));
+row.forEach((row) => table.add(new Column(row[0], row[1], row[2])));
 
 export const OrderTable = table;
 
 const b = (value: any) => new BigNumber(value);
 export default class Order extends Model {
-  static list(database: Database): Promise<Order[]> {
-    return database.list(OrderTable, r => Order.fromRow(r));
+  static list(database: Database, exchange: string): Promise<Order[]> {
+    return database.list(OrderTable, (r) => Order.fromRow(r), {
+      columns: ['exchange'],
+      values: [exchange],
+    });
   }
 
-  static last(database: Database): Promise<Order | null> {
-    return database.last(OrderTable, r => Order.fromRow(r));
+  static last(database: Database, exchange: string): Promise<Order | null> {
+    return database.lastWhere(OrderTable, ['exchange'], [exchange], (r) => Order.fromRow(r));
   }
 
   static fromRow(h: any): Order {
     return new Order(
+      h.exchange,
       h.left,
       h.right,
       b(h.txid),
@@ -46,8 +53,9 @@ export default class Order extends Model {
     );
   }
 
-  static from(h: any): Order {
+  static from(h: any, exchange: string): Order {
     return new Order(
+      exchange,
       h.symbol1,
       h.symbol2,
       b(h.id),
@@ -62,6 +70,7 @@ export default class Order extends Model {
   }
 
   constructor(
+    public exchange: string,
     public left: string,
     public right: string,
     public txid: BigNumber,
@@ -79,7 +88,7 @@ export default class Order extends Model {
 
   isIn(orders: Order[]) {
     return (
-      orders.filter(o => o.timestamp && o.timestamp.isEqualTo(this.timestamp))
+      orders.filter((o) => o.timestamp && o.timestamp.isEqualTo(this.timestamp))
         .length > 0
     );
   }
@@ -90,8 +99,8 @@ export default class Order extends Model {
 
   json(): any {
     const object: any = {};
-    Object.keys(this).forEach(k => {
-      if (this[k]?.constructor?.name == 'BigNumber') {
+    Object.keys(this).forEach((k) => {
+      if (this[k]?.constructor?.name === 'BigNumber') {
         object[k] = (this[k] as BigNumber).toNumber();
       } else {
         object[k] = this[k];
@@ -103,6 +112,7 @@ export default class Order extends Model {
   pairs(): [string, any, boolean?][] {
     return [
       ['txid', this.txid, true],
+      ['exchange', this.exchange, true],
       ['left', this.left, true],
       ['right', this.right, true],
       ['timestamp', this.timestamp.toString()],
@@ -116,11 +126,13 @@ export default class Order extends Model {
   }
 
   str() {
-    const { left, right, price, amount, timestamp, type } = this;
+    const {
+      left, right, price, amount, timestamp, type,
+    } = this;
     return (
-      `${timestamp.toNumber()} :: ${type} ${left}/${right} ` +
-      `${amount}/${amount.multipliedBy(price).toFixed(2)} ` +
-      `(${price.toFixed(2)})`
+      `${timestamp.toNumber()} :: ${type} ${left}/${right} `
+      + `${amount}/${amount.multipliedBy(price).toFixed(2)} `
+      + `(${price.toFixed(2)})`
     );
   }
 }

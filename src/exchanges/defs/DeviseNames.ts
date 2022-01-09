@@ -1,0 +1,15 @@
+export const DeviseNames = [
+  'EUR',
+  'USD',
+  'BTC',
+  'BCH',
+  'ETH',
+  'XRP',
+  'LTC',
+  'DASH',
+  'DOGE',
+  'ADA',
+  'SHIB',
+  'MANA',
+  'TRX',
+] as const;

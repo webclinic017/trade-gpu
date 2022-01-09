@@ -1,9 +1,10 @@
-import { Table } from './Table';
 import sqlite3 from 'sqlite3';
+import { Table } from './Table';
 import Model from './models/model';
 
 export class Database {
   name: string;
+
   database: sqlite3.Database;
 
   constructor(name: string) {
@@ -20,11 +21,11 @@ export class Database {
   ) {
     log && console.log('saving :: ', id ? 'updating' : 'creating');
     if (id) {
-      var update = `UPDATE ${name} SET `;
+      let update = `UPDATE ${name} SET `;
       update += pairs
-        .map(p => {
-          var field = p[0],
-            value = p[1];
+        .map((p) => {
+          const field = p[0];
+          const value = p[1];
           return p.length > 2 && p[2]
             ? `"${field}"="${value}"`
             : `"${field}"=${value}`;
@@ -39,29 +40,28 @@ export class Database {
           onId && onId(id);
         });
       });
-      return;
     } else {
-      var insert = `INSERT INTO ${name}`;
-      insert += '(' + pairs.map(p => p[0]).join(',') + ')';
+      let insert = `INSERT INTO ${name}`;
+      insert += `(${pairs.map((p) => p[0]).join(',')})`;
       insert += ' VALUES ';
-      insert +=
-        '(' +
-        pairs
-          .map(p => {
-            var value = p[1];
-            return p.length > 2 && p[2] ? `"${value}"` : value;
-          })
-          .join(',') +
-        ')';
+      insert
+        += `(${
+          pairs
+            .map((p) => {
+              const value = p[1];
+              return p.length > 2 && p[2] ? `"${value}"` : value;
+            })
+            .join(',')
+        })`;
 
-      var last_id = `SELECT MAX(id) as id FROM ${name}`;
+      const lastId = `SELECT MAX(id) as id FROM ${name}`;
 
       this.database.serialize(() => {
         this.database.run(insert, (res: any, err: Error | null, e: any) => {
           log && console.log('updating :: res', res);
           log && console.log('updating :: err', err);
           this.database.each(
-            last_id,
+            lastId,
             (err, row) => {
               row && row.id && onId && onId(row.id);
             },
@@ -77,9 +77,19 @@ export class Database {
   public list<TYPE extends Model>(
     table: Table,
     create: (row: any) => TYPE,
+    where?: { columns: string[]; values: any[] },
   ): Promise<TYPE[]> {
+    if (where) {
+      return this.executeWhere(
+        table,
+        table.list(where.columns),
+        where.values,
+        create,
+      );
+    }
+
     return new Promise((resolve, reject) => {
-      var list: TYPE[] = [];
+      const list: TYPE[] = [];
       this.database.run(table.str());
 
       this.database.each(
@@ -98,21 +108,33 @@ export class Database {
     values: any[],
     create: (r: any) => TYPE,
   ): Promise<TYPE> {
+    return this.executeWhere(table, table.last(columns), values, create).then(
+      (results) => {
+        const result = results.find((item) => !!item);
+        if (!result) throw 'no last item';
+        return result;
+      },
+    );
+  }
+
+  private executeWhere<TYPE extends Model>(
+    table: Table,
+    query: string,
+    values: any[],
+    create: (r: any) => TYPE,
+  ): Promise<TYPE[]> {
     return new Promise((resolve, reject) => {
-      var result: TYPE | null = null;
+      const result: TYPE[] = [];
       this.database.run(table.str());
 
-      const statement = this.database.prepare(table.last(columns));
+      const statement = this.database.prepare(query);
 
       statement.each(
         values,
         (err: Error, row: any) => {
-          result = create(row);
+          result.push(create(row));
         },
-        () => {
-          if (result) resolve(result);
-          else reject('no last item');
-        },
+        () => resolve(result),
       );
 
       statement.finalize();
@@ -124,7 +146,7 @@ export class Database {
     create: (r: any) => TYPE,
   ): Promise<TYPE | null> {
     return new Promise((resolve, reject) => {
-      var result: TYPE | null = null;
+      let result: TYPE | null = null;
       this.database.run(table.str());
 
       this.database.each(
@@ -142,7 +164,7 @@ export class Database {
       this.database.serialize(() => {
         this.database.run(table.str());
 
-        table.indexes().forEach(row => {
+        table.indexes().forEach((row) => {
           this.database.run(row);
         });
       });
