@@ -3,6 +3,7 @@ import Ticks, { TickTable } from '../database/models/ticks';
 import { Database } from '../database';
 import { Devise } from '../exchanges/defs';
 import { AbstractExchange } from '../exchanges/AbstractExchange';
+import { WalletTable } from '../database/models/wallet';
 
 type Resolve<TYPE> = (res: TYPE) => void;
 type Reject = () => void;
@@ -30,6 +31,7 @@ export default class TickHolder {
     this.db = new Database('trading');
     this.db.add(TickTable);
     this.db.add(OrderTable);
+    this.db.add(WalletTable);
   }
 
   private log(text: string, arg?: any) {

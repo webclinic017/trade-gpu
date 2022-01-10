@@ -4,6 +4,7 @@ import TickHolder from './TickHolder';
 import Tick from '../database/models/ticks';
 import Orders from './orders';
 import Order from '../database/models/order';
+import Wallet from '../database/models/wallet';
 import { CurrencyLimit, Devise } from '../exchanges/defs';
 import { AbstractExchange } from '../exchanges/AbstractExchange';
 
@@ -217,20 +218,16 @@ export default class TradeEngine {
       }
       if (
         tick.priceChangePercentage
-          && tick.priceChangePercentage.isGreaterThan(
-            config.maximum_price_change_percent,
-          )
+        && tick.priceChangePercentage.isGreaterThan(
+          config.maximum_price_change_percent,
+        )
       ) {
         throw `The price change ${tick.priceChangePercentage.toFixed()}% is > than ${
           config.maximum_price_change_percent
         }% - stopping`;
       }
       this.log(
-        `we buy ! ${
-          tick.high.toFixed()
-        } ${
-          tick.low.toFixed()
-        }${price.toFixed()}`,
+        `we buy ! ${tick.high.toFixed()} ${tick.low.toFixed()}${price.toFixed()}`,
       );
       let average = tick.high.plus(tick.low.multipliedBy(1)).dividedBy(2); // avg(high, low)
       average = average.plus(price).dividedBy(2); // avg(price, avg(high, low))
@@ -256,7 +253,7 @@ export default class TradeEngine {
 
       if (
         amount.isGreaterThan(0)
-          && total.decimalPlaces(configuration.pricePrecision).toNumber() > 0
+        && total.decimalPlaces(configuration.pricePrecision).toNumber() > 0
       ) {
         const toSubtract = 10 ** -this.decimals(config.to);
         this.log(`10^-${this.decimals(config.to)} = ${toSubtract}`);
@@ -325,10 +322,7 @@ export default class TradeEngine {
           );
           return true;
         } catch (e) {
-          if (
-            `${e}`.indexOf('Invalid price') < 0
-              || numberDecimalsPrice === 0
-          ) throw e;
+          if (`${e}`.indexOf('Invalid price') < 0 || numberDecimalsPrice === 0) throw e;
 
           numberDecimalsPrice--;
           this.log(
@@ -449,12 +443,33 @@ export default class TradeEngine {
       i++;
     }
 
+    const wallets: Wallet[] = [];
     Object.keys(array).forEach((k) => {
       const { expectedValue, currentValue } = array[k];
       this.log(
         `managing for ${k} ; expected := ${expectedValue.toNumber()} ; current := ${currentValue}`,
       );
+
+      const timestamp = new BigNumber(new Date().getTime());
+      const wallet = new Wallet(
+        this.exchange.name(),
+        timestamp,
+        k,
+        expectedValue,
+        currentValue,
+      );
+      wallets.push(wallet);
     });
+
+    i = 0;
+    while (i < wallets.length) {
+      try {
+        await wallets[i].save(this.database());
+      } catch (err) {
+        this.error(`Error saving wallet ${wallets[i].devise}`, err);
+      }
+      i++;
+    }
 
     i = 0;
     while (i < this.configs.length) {

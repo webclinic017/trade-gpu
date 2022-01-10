@@ -80,9 +80,9 @@ export default class Wallet extends Model {
     return [
       ['exchange', this.exchange, true],
       ['timestamp', this.timestamp.toString()],
-      ['devise', this.devise],
+      ['devise', this.devise, true],
       ['expected_amount', this.expectedAmount.toString()],
-      ['current_amount', this.expectedAmount.toString()],
+      ['current_amount', this.currentAmount.toString()],
     ];
   }
 

@@ -21,55 +21,53 @@ export class Database {
   ) {
     log && console.log('saving :: ', id ? 'updating' : 'creating');
     if (id) {
-      let update = `UPDATE ${name} SET `;
-      update += pairs
-        .map((p) => {
-          const field = p[0];
-          const value = p[1];
-          return p.length > 2 && p[2]
-            ? `"${field}"="${value}"`
-            : `"${field}"=${value}`;
-        })
-        .join(',');
-      update += ` WHERE id=${id}`;
+      const update = `UPDATE ${name} SET ${
+        pairs.map((p) => `"${p[0]}"=?`).join(',')
+      } WHERE id=${id}`;
+      const statement = this.database.prepare(update);
 
-      this.database.serialize(() => {
-        this.database.run(update, (res: any, err: Error | null, e: any) => {
-          log && console.log('updating :: res', res);
+      statement.each(
+        pairs.map((p) => p[1]),
+        (err: Error, row: any) => {
+          log && console.log('updating :: res', row);
           log && console.log('updating :: err', err);
           onId && onId(id);
-        });
-      });
+        },
+        () => {},
+      );
+
+      statement.finalize();
     } else {
-      let insert = `INSERT INTO ${name}`;
-      insert += `(${pairs.map((p) => p[0]).join(',')})`;
-      insert += ' VALUES ';
-      insert
-        += `(${
-          pairs
-            .map((p) => {
-              const value = p[1];
-              return p.length > 2 && p[2] ? `"${value}"` : value;
-            })
-            .join(',')
-        })`;
+      const create = `INSERT INTO ${name}`
+        + `(${pairs.map((p) => p[0]).join(',')})`
+        + ' VALUES '
+        + `(${pairs.map((p) => '?').join(',')})`;
+
+      const statement = this.database.prepare(create);
+
+      statement.each(
+        pairs.map((p) => p[1]),
+        (err: Error, row: any) => {
+          log && console.log('updating :: res', row);
+          log && console.log('updating :: err', err);
+        },
+        () => {},
+      );
+
+      statement.finalize();
 
       const lastId = `SELECT MAX(id) as id FROM ${name}`;
 
       this.database.serialize(() => {
-        this.database.run(insert, (res: any, err: Error | null, e: any) => {
-          log && console.log('updating :: res', res);
-          log && console.log('updating :: err', err);
-          this.database.each(
-            lastId,
-            (err, row) => {
-              row && row.id && onId && onId(row.id);
-            },
-            () => {
-              /* here ?? */
-            },
-          );
-        });
+        this.database.each(
+          lastId,
+          (err, row) => {
+            row && row.id && onId && onId(row.id);
+          },
+          () => {
+            /* here ?? */
+          },
+        );
       });
     }
   }
