@@ -12,9 +12,9 @@ const row: [string, string, Options][] = [
   ['timeout', 'INTEGER', { nullable: false, index: true }],
   ['timestamp', 'INTEGER', { nullable: false, index: true }],
   ['type', 'TEXT', { nullable: false }],
-  ['price', 'TEXT', { nullable: false }],
-  ['amount', 'INTEGER', { nullable: false }],
-  ['pending', 'INTEGER', { nullable: false }],
+  ['price', 'TEXT', { nullable: false }], // will be transformed to/from BigNumer
+  ['amount', 'TEXT', { nullable: false }], // will be transformed to/from BigNumer
+  ['pending', 'TEXT', { nullable: false }], // will be transformed to/from BigNumer
   ['left', 'INTEGER', { nullable: false, index: true }],
   ['completed', 'INTEGER', { nullable: false }],
   ['right', 'INTEGER', { nullable: false, index: true }],

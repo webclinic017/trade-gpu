@@ -12,15 +12,15 @@ const row: [string, string, Options][] = [
   ['timestamp', 'INTEGER', { nullable: false, index: true }],
   ['left', 'TEXT', { nullable: false, index: true }],
   ['right', 'TEXT', { nullable: false, index: true }],
-  ['low', 'INTEGER', { nullable: false }],
-  ['high', 'INTEGER', { nullable: false }],
-  ['last', 'INTEGER', { nullable: false }],
-  ['volume', 'INTEGER', { nullable: false }],
-  ['volume30d', 'INTEGER', { nullable: false }],
-  ['bid', 'INTEGER', { nullable: false }],
-  ['ask', 'INTEGER', { nullable: false }],
-  ['priceChange', 'INTEGER', { nullable: false }],
-  ['priceChangePercentage', 'INTEGER', { nullable: false }],
+  ['low', 'TEXT', { nullable: false }], // will be transformed to/from BigNumer
+  ['high', 'TEXT', { nullable: false }], // will be transformed to/from BigNumer
+  ['last', 'TEXT', { nullable: false }], // will be transformed to/from BigNumer
+  ['volume', 'TEXT', { nullable: false }], // will be transformed to/from BigNumer
+  ['volume30d', 'TEXT', { nullable: false }], // will be transformed to/from BigNumer
+  ['bid', 'TEXT', { nullable: false }], // will be transformed to/from BigNumer
+  ['ask', 'TEXT', { nullable: false }], // will be transformed to/from BigNumer
+  ['priceChange', 'TEXT', { nullable: false }], // will be transformed to/from BigNumer
+  ['priceChangePercentage', 'TEXT', { nullable: false }], // will be transformed to/from BigNumer
 ];
 row.forEach((r) => table.add(new Column(r[0], r[1], r[2])));
 
