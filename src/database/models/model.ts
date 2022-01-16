@@ -1,5 +1,11 @@
 import { Database } from '..';
 
+export type ModelPairs = [
+  string,
+  boolean | string | number | Date | undefined,
+  boolean?,
+][];
+
 export default abstract class Model {
   private enabled: boolean = true;
 
@@ -12,7 +18,7 @@ export default abstract class Model {
     this.enabled = !!enabled;
   }
 
-  pairs(): [string, any, boolean?][] {
+  pairs(): ModelPairs {
     throw 'to implement';
   }
 
@@ -26,7 +32,7 @@ export default abstract class Model {
         this.name,
         this.pairs(),
         this.enabled,
-        id => {
+        (id) => {
           this.setId(id);
           resolve(this);
         },

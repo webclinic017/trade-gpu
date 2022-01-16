@@ -1,5 +1,5 @@
 import { BigNumber } from 'bignumber.js';
-import Model from './model';
+import Model, { ModelPairs } from './model';
 import {
   Database, Table, Column, Options,
 } from '..';
@@ -104,7 +104,7 @@ export default class Tick extends Model {
     super('tick');
   }
 
-  pairs(): [string, any, boolean?][] {
+  pairs(): ModelPairs {
     return [
       ['left', this.left, true],
       ['right', this.right, true],

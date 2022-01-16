@@ -111,8 +111,8 @@ export default class Order extends Model {
 
   pairs(): [string, any, boolean?][] {
     return [
-      ['txid', this.txid, true],
-      ['exchange', this.exchange.toString(), true],
+      ['txid', this.txid.toString(), true],
+      ['exchange', this.exchange, true],
       ['left', this.left, true],
       ['right', this.right, true],
       ['timestamp', this.timestamp.toString()],
