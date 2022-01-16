@@ -187,6 +187,14 @@ export class Cex extends AbstractExchange {
     const result: any = await this.wrap(
       this.cexAuth.ticker(`${left}/${right}`),
     );
+
+    if (
+      typeof result === 'string'
+      || `${result}`.indexOf('Invalid Symbols') >= 0
+    ) {
+      throw new Error(`${result}`);
+    }
+
     const obj: any = { pair: result.pair };
     [
       'timestamp',
