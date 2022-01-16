@@ -21,22 +21,24 @@ export class Database {
   ) {
     log && console.log('saving :: ', id ? 'updating' : 'creating');
     if (id) {
-      const update = `UPDATE ${name} SET ${
-        pairs.map((p) => `"${p[0]}"=?`).join(',')
-      } WHERE id=${id}`;
+      const update = `UPDATE ${name} SET ${pairs
+        .map((p) => `"${p[0]}"=?`)
+        .join(',')} WHERE id=${id}`;
       const statement = this.database.prepare(update);
 
       statement.each(
         pairs.map((p) => p[1]),
         (err: Error, row: any) => {
           log && console.log('updating :: res', row);
-          log && console.log('updating :: err', err);
-          onId && onId(id);
+          err && console.log('updating :: err', err);
         },
-        () => {},
+        (err: Error) => {
+          console.error('updating error', err);
+        },
       );
 
       statement.finalize();
+      onId && onId(id);
     } else {
       const create = `INSERT INTO ${name}`
         + `(${pairs.map((p) => p[0]).join(',')})`
