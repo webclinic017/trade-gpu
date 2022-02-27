@@ -274,9 +274,25 @@ export default class TradeEngine extends InternalTradeEngine {
     lastBuyComplete?: Order | null,
   ) {
     if (!lastBuyComplete) {
-      const result = await this.exchange.history_orders(config.to, config.from);
+      let result = await this.exchange.history_orders(config.to, config.from);
       console.log(result);
-      throw `Can't manage selling ${config.to} -> ${config.from}, no buy order is known`;
+
+      // the result is ordered by time ->
+      result = result.reverse();
+      const lastBuy = result.find((order) => order.type === 'buy');
+
+      if (lastBuy) {
+        const order = Order.from(lastBuy, this.exchange.name());
+        await order.save(this.database());
+
+        this.log(
+          "fixed last known transaction for buy order, it's now := ",
+          order.json(),
+        );
+        lastBuyComplete = order;
+      } else {
+        throw `Can't manage selling ${config.to} -> ${config.from}, no buy order is known`;
+      }
     } else if (lastBuyComplete.type !== 'buy') {
       throw `INVALID, last order was not buy, having := ${lastBuyComplete.str()}`;
     }
