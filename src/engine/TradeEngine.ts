@@ -7,6 +7,12 @@ import Order from '../database/models/order';
 import Wallet from '../database/models/wallet';
 import { CurrencyLimit, Devise } from '../exchanges/defs';
 import { AbstractExchange } from '../exchanges/AbstractExchange';
+import InternalTradeEngine, {
+  DeviseConfig,
+  TradeConfig,
+} from './InternalTradeEngine';
+
+export { DeviseConfig, TradeConfig } from './InternalTradeEngine';
 
 BigNumber.set({ DECIMAL_PLACES: 10, ROUNDING_MODE: BigNumber.ROUND_FLOOR });
 
@@ -14,125 +20,31 @@ interface DeviseValue {
   [key: string]: { expectedValue: BigNumber; currentValue: BigNumber };
 }
 
-export interface DeviseConfig {
-  name: Devise;
-  decimals: number;
-  minimum: number;
-  decimals_price?: number;
-}
-
-export interface TradeConfig {
-  from: Devise;
-  to: Devise;
-  buy_coef: number;
-  sell_coef: number;
-  maximum_price_change_percent: number;
-  maximum_balance_used: number;
-}
-
-export default class TradeEngine {
-  private callback: () => void = () => this.afterTickStarted();
-
+export default class TradeEngine extends InternalTradeEngine {
   private started: boolean;
 
-  private currencyLimits?: CurrencyLimit[];
-
   constructor(
-    private devises: Map<Devise, DeviseConfig>,
-    private configs: TradeConfig[],
-    private exchange: AbstractExchange,
-    private tickHolder: TickHolder,
-    private ordersHolders: Orders,
+    devises: Map<Devise, DeviseConfig>,
+    configs: TradeConfig[],
+    exchange: AbstractExchange,
+    tickHolder: TickHolder,
+    ordersHolders: Orders,
   ) {
+    super(devises, configs, exchange, tickHolder, ordersHolders);
     this.started = false;
-  }
-
-  private log(text: string, arg?: any) {
-    if (arguments.length > 1) console.log(`${this.exchange.name()} ${text}`, arg);
-    else console.log(`${this.exchange.name()} ${text}`);
-  }
-
-  private error(text: string, arg?: any) {
-    if (arguments.length > 1) console.error(`${this.exchange.name()} ${text}`, arg);
-    else console.error(`${this.exchange.name()} ${text}`);
-  }
-
-  public async load_configuration(): Promise<CurrencyLimit[]> {
-    if (this.currencyLimits) return this.currencyLimits;
-    this.currencyLimits = (await this.exchange.currency_limits()) || [];
-    return this.currencyLimits;
-  }
-
-  private database(): Database {
-    return this.tickHolder.database();
   }
 
   public start() {
     if (!this.started) {
       this.started = true;
-      this.callback();
-    }
-  }
-
-  private currency(from?: Devise, to?: Devise): CurrencyLimit | null {
-    if (!this.currencyLimits) throw 'invalid configuration';
-
-    return (
-      this.currencyLimits.find((cl) => cl.from === from && cl.to === to) || null
-    );
-  }
-
-  private decimals(devise?: Devise) {
-    if (!devise) return 2;
-    const object = this.devises.get(devise);
-    if (!object) return 2;
-    let { decimals } = object;
-    if (decimals === null || undefined === decimals) decimals = 0;
-    if (decimals < 0) decimals = 0;
-    return decimals;
-  }
-
-  private async expectedValue(
-    config: TradeConfig,
-  ): Promise<[BigNumber, BigNumber]> {
-    try {
-      const results = await Promise.all([
-        Tick.last(
-          this.database(),
-          this.exchange.name(),
-          config.to,
-          config.from,
-        ),
-        this.ordersHolders.list(config.from, config.to),
-      ]);
-
-      const configuration = this.currency(config.from, config.to);
-      if (!configuration) throw `couldn't load configuration for ${config.from} Ò-> ${config.to}`;
-
-      const tick = results[0];
-      const orders = results[1] || [];
-
-      if (!tick) throw 'no tick';
-
-      const price = tick.last;
-      if (!price) throw 'no last price';
-
-      const current = orders.filter((o) => !o.completed && o.type === 'sell');
-
-      const expectedValue = current
-        .map((order) => order.price.multipliedBy(order.amount))
-        .reduce((p, c) => p.plus(c), new BigNumber(0));
-
-      const currentValue = current
-        .map((order) => tick.last.multipliedBy(order.amount))
-        .reduce((p, c) => p.plus(c), new BigNumber(0));
-      return [expectedValue, currentValue];
-    } catch (e) {
-      return [new BigNumber(0), new BigNumber(0)];
+      this.afterTickStarted();
     }
   }
 
   private fullfillOrder = async (config: TradeConfig) => {
+    const { from, to } = config;
+    this.log(`managing for ${from}->${to}`);
+
     try {
       const results = await Promise.all([
         Tick.last(
@@ -216,121 +128,15 @@ export default class TradeEngine {
 
         return managed;
       }
-      if (
-        tick.priceChangePercentage
-        && tick.priceChangePercentage.isGreaterThan(
-          config.maximum_price_change_percent,
-        )
-      ) {
-        throw `The price change ${tick.priceChangePercentage.toFixed()}% is > than ${
-          config.maximum_price_change_percent
-        }% - stopping`;
-      }
-      this.log(
-        `we buy ! ${tick.high.toFixed()} ${tick.low.toFixed()}${price.toFixed()}`,
-      );
-      let average = tick.high.plus(tick.low.multipliedBy(1)).dividedBy(2); // avg(high, low)
-      average = average.plus(price).dividedBy(2); // avg(price, avg(high, low))
 
-      let priceToBuy = average.multipliedBy(config.buy_coef);
-      let amount = fromBalance.dividedBy(priceToBuy);
-
-      let total = amount.multipliedBy(priceToBuy);
-      const totalBalance = fromBalance.multipliedBy(0.95);
-
-      // really need to fix this ugly one, easy however had to take doggo out :p
-
-      const isCurrentlyLower = priceToBuy.isLessThanOrEqualTo(price);
-      if (!isCurrentlyLower) {
-        // throw `ERROR : priceToBuy := ${priceToBuy.toFixed()} is lower than price := ${price}`;
-        priceToBuy = price.multipliedBy(0.95);
-      }
-
-      priceToBuy = priceToBuy.decimalPlaces(configuration.pricePrecision);
-      this.log(
-        `will use price ${priceToBuy} -> maximum ${configuration.pricePrecision} decimals`,
+      const managed = this.manageBuyingOrder(
+        config,
+        configuration,
+        tick,
+        price,
+        fromBalance,
       );
 
-      if (
-        amount.isGreaterThan(0)
-        && total.decimalPlaces(configuration.pricePrecision).toNumber() > 0
-      ) {
-        const toSubtract = 10 ** -this.decimals(config.to);
-        this.log(`10^-${this.decimals(config.to)} = ${toSubtract}`);
-        do {
-          amount = amount.minus(toSubtract);
-
-          total = amount.multipliedBy(priceToBuy);
-        } while (total.isGreaterThanOrEqualTo(totalBalance));
-        this.log(
-          `fixing amount:${amount.toFixed(
-            this.decimals(config.to),
-          )} total:${total.toFixed(
-            this.decimals(config.from),
-          )} totalBalance:${totalBalance}(${fromBalance})`,
-        );
-      }
-
-      const isBiggerThanMinimum = amount.comparedTo(configuration.minimumSizeTo) >= 0;
-
-      if (!isBiggerThanMinimum) {
-        throw `ERROR : amount := ${amount.toFixed()} is lower than the minimum := ${
-          configuration.minimumSizeTo
-        }`;
-      }
-
-      if (totalBalance.toNumber() <= 2) {
-        // 2€/usd etc
-        throw `ERROR : invalid total balance ${totalBalance.toNumber()}`;
-      }
-
-      // get the final amount, floor to the maximum number of decimals to use => floor is ok,
-      // even in worst cases, it will be using less balance than expected
-      const finalAmount = amount
-        .decimalPlaces(this.decimals(config.to))
-        .toNumber();
-
-      let numberDecimalsPrice = configuration.pricePrecision;
-
-      while (numberDecimalsPrice >= 0) {
-        try {
-          // send the request
-          // get the final price, floor to the maximum number of decimals to use => floor is ok
-          // since it will still be lower than the expected price (lower is better)
-          const finalPriceToBuy = priceToBuy
-            .decimalPlaces(numberDecimalsPrice)
-            .toNumber();
-          this.log(
-            `finalAmount amount:${finalAmount} finalPriceToBuy ${finalPriceToBuy}`,
-          );
-
-          await this.exchange.place_order(
-            config.to,
-            config.from,
-            'buy',
-            finalAmount,
-            finalPriceToBuy,
-          );
-
-          const newOrders = await this.ordersHolders.list(
-            config.from,
-            config.to,
-          );
-          this.log(
-            'new orders := ',
-            newOrders.map((o) => o.str()),
-          );
-          return true;
-        } catch (e) {
-          if (`${e}`.indexOf('Invalid price') < 0 || numberDecimalsPrice === 0) throw e;
-
-          numberDecimalsPrice--;
-          this.log(
-            'Error with price, trying less decimals',
-            numberDecimalsPrice,
-          );
-        }
-      }
       throw 'out of the loop without either error or request sent... ?';
     } catch (err) {
       this.error(`having ${err}`, err);
@@ -338,6 +144,126 @@ export default class TradeEngine {
 
     return false;
   };
+
+  private async manageBuyingOrder(
+    config: TradeConfig,
+    configuration: CurrencyLimit,
+    tick: Tick,
+    price: BigNumber,
+    fromBalance: BigNumber,
+  ): Promise<boolean> {
+    if (
+      tick.priceChangePercentage
+      && tick.priceChangePercentage.isGreaterThan(
+        config.maximum_price_change_percent,
+      )
+    ) {
+      throw `The price change ${tick.priceChangePercentage.toFixed()}% is > than ${
+        config.maximum_price_change_percent
+      }% - stopping`;
+    }
+    this.log(
+      `we buy ! ${tick.high.toFixed()} ${tick.low.toFixed()}${price.toFixed()}`,
+    );
+    let average = tick.high.plus(tick.low.multipliedBy(1)).dividedBy(2); // avg(high, low)
+    average = average.plus(price).dividedBy(2); // avg(price, avg(high, low))
+
+    let priceToBuy = average.multipliedBy(config.buy_coef);
+    let amount = fromBalance.dividedBy(priceToBuy);
+
+    let total = amount.multipliedBy(priceToBuy);
+    const totalBalance = fromBalance.multipliedBy(0.95);
+
+    // really need to fix this ugly one, easy however had to take doggo out :p
+
+    const isCurrentlyLower = priceToBuy.isLessThanOrEqualTo(price);
+    if (!isCurrentlyLower) {
+      // throw `ERROR : priceToBuy := ${priceToBuy.toFixed()} is lower than price := ${price}`;
+      priceToBuy = price.multipliedBy(0.95);
+    }
+
+    priceToBuy = priceToBuy.decimalPlaces(configuration.pricePrecision);
+    this.log(
+      `will use price ${priceToBuy} -> maximum ${configuration.pricePrecision} decimals`,
+    );
+
+    if (
+      amount.isGreaterThan(0)
+      && total.decimalPlaces(configuration.pricePrecision).toNumber() > 0
+    ) {
+      const toSubtract = 10 ** -this.decimals(config.to);
+      this.log(`10^-${this.decimals(config.to)} = ${toSubtract}`);
+      do {
+        amount = amount.minus(toSubtract);
+
+        total = amount.multipliedBy(priceToBuy);
+      } while (total.isGreaterThanOrEqualTo(totalBalance));
+      this.log(
+        `fixing amount:${amount.toFixed(
+          this.decimals(config.to),
+        )} total:${total.toFixed(
+          this.decimals(config.from),
+        )} totalBalance:${totalBalance}(${fromBalance})`,
+      );
+    }
+
+    const isBiggerThanMinimum = amount.comparedTo(configuration.minimumSizeTo) >= 0;
+
+    if (!isBiggerThanMinimum) {
+      throw `ERROR : amount := ${amount.toFixed()} is lower than the minimum := ${
+        configuration.minimumSizeTo
+      }`;
+    }
+
+    if (totalBalance.toNumber() <= 2) {
+      // 2€/usd etc
+      throw `ERROR : invalid total balance ${totalBalance.toNumber()}`;
+    }
+
+    // get the final amount, floor to the maximum number of decimals to use => floor is ok,
+    // even in worst cases, it will be using less balance than expected
+    const finalAmount = amount
+      .decimalPlaces(this.decimals(config.to))
+      .toNumber();
+
+    let numberDecimalsPrice = configuration.pricePrecision;
+
+    while (numberDecimalsPrice >= 0) {
+      try {
+        // send the request
+        // get the final price, floor to the maximum number of decimals to use => floor is ok
+        // since it will still be lower than the expected price (lower is better)
+        const finalPriceToBuy = priceToBuy
+          .decimalPlaces(numberDecimalsPrice)
+          .toNumber();
+        this.log(
+          `finalAmount amount:${finalAmount} finalPriceToBuy ${finalPriceToBuy}`,
+        );
+
+        await this.exchange.place_order(
+          config.to,
+          config.from,
+          'buy',
+          finalAmount,
+          finalPriceToBuy,
+        );
+
+        const newOrders = await this.ordersHolders.list(config.from, config.to);
+        this.log(
+          'new orders := ',
+          newOrders.map((o) => o.str()),
+        );
+        return true;
+      } catch (e) {
+        if (`${e}`.indexOf('Invalid price') < 0 || numberDecimalsPrice === 0) throw e;
+
+        numberDecimalsPrice--;
+        this.log('Error with price, trying less decimals', numberDecimalsPrice);
+      }
+    }
+
+    return false;
+  }
 
   private async manageSellingOrder(
     config: TradeConfig,
@@ -348,6 +274,8 @@ export default class TradeEngine {
     lastBuyComplete?: Order | null,
   ) {
     if (!lastBuyComplete) {
+      const result = await this.exchange.history_orders();
+      console.log(result);
       throw `Can't manage selling ${config.to} -> ${config.from}, no buy order is known`;
     } else if (lastBuyComplete.type !== 'buy') {
       throw `INVALID, last order was not buy, having := ${lastBuyComplete.str()}`;
@@ -418,6 +346,36 @@ export default class TradeEngine {
     throw 'out of the loop without either error or request sent... ?';
   }
 
+  private async manageWallets(array: DeviseValue) {
+    const wallets: Wallet[] = [];
+    Object.keys(array).forEach((k) => {
+      const { expectedValue, currentValue } = array[k];
+      this.log(
+        `managing for ${k} ; expected := ${expectedValue.toNumber()} ; current := ${currentValue}`,
+      );
+
+      const timestamp = new BigNumber(new Date().getTime());
+      const wallet = new Wallet(
+        this.exchange.name(),
+        timestamp,
+        k,
+        expectedValue,
+        currentValue,
+      );
+      wallets.push(wallet);
+    });
+
+    let i = 0;
+    while (i < wallets.length) {
+      try {
+        await wallets[i].save(this.database());
+      } catch (err) {
+        this.error(`Error saving wallet ${wallets[i].devise}`, err);
+      }
+      i++;
+    }
+  }
+
   private afterTickStarted = async () => {
     let i = 0;
 
@@ -443,53 +401,14 @@ export default class TradeEngine {
       i++;
     }
 
-    const wallets: Wallet[] = [];
-    Object.keys(array).forEach((k) => {
-      const { expectedValue, currentValue } = array[k];
-      this.log(
-        `managing for ${k} ; expected := ${expectedValue.toNumber()} ; current := ${currentValue}`,
-      );
-
-      const timestamp = new BigNumber(new Date().getTime());
-      const wallet = new Wallet(
-        this.exchange.name(),
-        timestamp,
-        k,
-        expectedValue,
-        currentValue,
-      );
-      wallets.push(wallet);
-    });
-
-    i = 0;
-    while (i < wallets.length) {
-      try {
-        await wallets[i].save(this.database());
-      } catch (err) {
-        this.error(`Error saving wallet ${wallets[i].devise}`, err);
-      }
-      i++;
-    }
+    await this.manageWallets(array);
 
     i = 0;
     while (i < this.configs.length) {
-      const config = this.configs[i];
-      const { from, to } = config;
-      this.log(`managing for ${from}->${to}`);
-      await this.fullfillOrder(config);
+      await this.fullfillOrder(this.configs[i]);
       i++;
     }
 
-    setTimeout(this.callback, 60000);
+    setTimeout(() => this.afterTickStarted(), 60000);
   };
-
-  private last(orders: Order[], type: 'sell' | 'buy') {
-    return orders
-      .filter((o) => o.type === type)
-      .reduce((left: Order | null, right: Order) => {
-        if (!left) return right;
-        if (!right) return left;
-        return left.timestamp.isGreaterThan(right.timestamp) ? left : right;
-      }, null);
-  }
 }
