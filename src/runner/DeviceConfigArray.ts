@@ -59,6 +59,12 @@ const decimals: DeviseConfig[] = [
     decimals_price: 10,
     minimum: 1,
   },
+  {
+    name: 'OMG',
+    decimals: 0,
+    decimals_price: 10,
+    minimum: 1,
+  },
 ];
 
 export function getDeviseConfigArray() {

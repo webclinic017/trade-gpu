@@ -12,4 +12,5 @@ export const DeviseNames = [
   'SHIB',
   'MANA',
   'TRX',
+  'OMG',
 ] as const;
