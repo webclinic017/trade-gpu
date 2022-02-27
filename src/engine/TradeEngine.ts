@@ -274,7 +274,7 @@ export default class TradeEngine extends InternalTradeEngine {
     lastBuyComplete?: Order | null,
   ) {
     if (!lastBuyComplete) {
-      const result = await this.exchange.history_orders();
+      const result = await this.exchange.history_orders(config.to, config.from);
       console.log(result);
       throw `Can't manage selling ${config.to} -> ${config.from}, no buy order is known`;
     } else if (lastBuyComplete.type !== 'buy') {

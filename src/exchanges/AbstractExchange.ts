@@ -14,7 +14,10 @@ export abstract class AbstractExchange {
 
   public abstract open_orders(): Promise<ShortOrder[]>;
 
-  public abstract history_orders(): Promise<ShortOrder[]>;
+  public abstract history_orders(
+    left: Devise,
+    right: Devise,
+  ): Promise<ShortOrder[]>;
 
   public abstract place_order(
     left: Devise,

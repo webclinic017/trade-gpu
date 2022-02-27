@@ -117,8 +117,13 @@ export class Cex extends AbstractExchange {
     return result.pairs.map((p: CurrencyLimitAPI) => toCurrencyLimit(p));
   }
 
-  public async history_orders(): Promise<ShortOrder[]> {
-    const result: any[] = await this.wrap(this.cexAuth.trade_history(null));
+  public async history_orders(
+    left: Devise,
+    right: Devise,
+  ): Promise<ShortOrder[]> {
+    const result: any[] = await this.wrap(
+      this.cexAuth.trade_history(`${left}/${right}`),
+    );
     if (result && result.length > 0) return result.map((o) => this.toShortOrder(o));
     return [];
   }
