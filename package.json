@@ -29,6 +29,7 @@
     "bignumber.js": "^9.0.0",
     "cexio-api-node": "git+https://github.com/codlab/cexio-api-node.git",
     "dotenv": "^8.2.0",
+    "moment": "^2.29.1",
     "sqlite3": "^4.1.1",
     "tslib": "^1.10.0",
     "typescript": "^3.7.5"

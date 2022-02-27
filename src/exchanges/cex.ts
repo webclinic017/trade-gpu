@@ -1,6 +1,7 @@
 // @ts-ignore
 import CEX from 'cexio-api-node';
 import BigNumber from 'bignumber.js';
+import moment from 'moment';
 import cex from '../config/cex';
 import { AbstractExchange } from './AbstractExchange';
 import {
@@ -95,7 +96,13 @@ export class Cex extends AbstractExchange {
   private toShortOrder(raw: any): ShortOrder {
     const obj: any = {};
     ['id', 'type', 'symbol1', 'symbol2'].forEach((k) => (obj[k] = raw[k]));
-    ['time'].forEach((k) => (obj[k] = parseInt(raw[k] || 0)));
+    ['time'].forEach((k) => {
+      if (!!raw[k] && typeof raw[k] === 'string' && raw[k].indexOf('T') > 0) {
+        obj[k] = moment(raw[k]).unix() * 1000; // CEX is sending millis but unix() is in seconds
+      } else {
+        obj[k] = parseInt(raw[k] || 0);
+      }
+    });
     ['price', 'amount', 'pending'].forEach(
       (k) => (obj[k] = new BigNumber(raw[k])),
     );
