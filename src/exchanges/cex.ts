@@ -122,7 +122,7 @@ export class Cex extends AbstractExchange {
     right: Devise,
   ): Promise<ShortOrder[]> {
     const result: any[] = await this.wrap(
-      this.cexAuth.trade_history(`${left}/${right}`),
+      this.cexAuth.archived_orders(`${left}/${right}`),
     );
     if (result && result.length > 0) return result.map((o) => this.toShortOrder(o));
     return [];
