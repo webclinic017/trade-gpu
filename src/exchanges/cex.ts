@@ -131,7 +131,11 @@ export class Cex extends AbstractExchange {
     const result: any[] = await this.wrap(
       this.cexAuth.archived_orders(`${left}/${right}`),
     );
-    if (result && result.length > 0) return result.map((o) => this.toShortOrder(o));
+    if (result && result.length > 0) {
+      return result
+        .map((o) => this.toShortOrder(o))
+        .sort((left, right) => left.time - right.time);
+    }
     return [];
   }
 
