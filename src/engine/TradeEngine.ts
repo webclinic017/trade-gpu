@@ -275,7 +275,6 @@ export default class TradeEngine extends InternalTradeEngine {
   ) {
     if (!lastBuyComplete) {
       let result = await this.exchange.history_orders(config.to, config.from);
-      console.log(result);
 
       // the result is ordered by time ->
       result = result.reverse();
