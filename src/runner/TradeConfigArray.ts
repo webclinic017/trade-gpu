@@ -81,6 +81,14 @@ const configs: TradeConfig[] = [
     maximum_price_change_percent: 20,
     maximum_balance_used: 60,
   },
+  {
+    from: 'USD',
+    to: 'TRX',
+    buy_coef: 0.985,
+    sell_coef: 1.028,
+    maximum_price_change_percent: 20,
+    maximum_balance_used: 60,
+  },
 ];
 
 export function getTradeConfigArray() {
