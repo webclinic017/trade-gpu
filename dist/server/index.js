@@ -15,23 +15,55 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.Server = void 0;
 const https_1 = __importDefault(require("https"));
 const express_1 = __importDefault(require("express"));
+const fs_1 = __importDefault(require("fs"));
+const dgram_1 = __importDefault(require("dgram"));
+const server_1 = __importDefault(require("../config/server"));
 class Server {
     constructor(runner) {
         this.runner = runner;
         this.app = express_1.default();
-        this.server = https_1.default.createServer(this.app);
-        this.app.get("/orders", (req, res) => __awaiter(this, void 0, void 0, function* () {
+        this.key = server_1.default.key ? fs_1.default.readFileSync(server_1.default.key) : undefined;
+        this.cert = server_1.default.cert ? fs_1.default.readFileSync(server_1.default.cert) : undefined;
+        this.server = https_1.default.createServer({ key: this.key, cert: this.cert }, this.app);
+        this.app.get('/orders', (req, res) => __awaiter(this, void 0, void 0, function* () {
             try {
-                const orders = runner.orders();
+                const orders = yield runner.orders();
                 res.json(orders);
             }
             catch (err) {
                 res.status(500).json({ err: `${err}` });
             }
         }));
+        this.datagram_server = dgram_1.default.createSocket('udp4');
+        this.datagram_server.on('message', (message, rinfo) => {
+            var _a;
+            try {
+                const json = JSON.parse(message);
+                if (json.discover) {
+                    const answer = {
+                        service: 'trader',
+                        data: {
+                            port: server_1.default.port,
+                            cert: (_a = this.cert) === null || _a === void 0 ? void 0 : _a.toString(),
+                        },
+                    };
+                    const message = Buffer.from(JSON.stringify(answer));
+                    console.log(`send replay to ${rinfo.address} ${rinfo.port}`);
+                    this.datagram_server.send(message, 0, message.length, rinfo.port, rinfo.address);
+                }
+            }
+            catch (e) {
+                console.log(e);
+            }
+        });
+        this.datagram_server.on('listening', () => {
+            const address = this.datagram_server.address();
+            console.log(`server listening ${address.address}:${address.port}`);
+        });
     }
     start() {
-        this.server.listen(443, () => console.log("listening on port 443"));
+        this.server.listen(4443, () => console.log('listening on port 4443'));
+        this.datagram_server.bind(1732);
     }
 }
 exports.Server = Server;

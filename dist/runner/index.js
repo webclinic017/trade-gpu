@@ -54,7 +54,7 @@ class Runner {
                 this.tradeEngine.start();
             }
             catch (err) {
-                console.error("starting error", err);
+                console.error('starting error', err);
             }
         });
     }
