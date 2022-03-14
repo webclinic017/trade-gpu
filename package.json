@@ -29,12 +29,14 @@
     "bignumber.js": "^9.0.0",
     "cexio-api-node": "git+https://github.com/codlab/cexio-api-node.git",
     "dotenv": "^8.2.0",
+    "express": "^4.17.3",
     "moment": "^2.29.1",
     "sqlite3": "^4.1.1",
     "tslib": "^1.10.0",
     "typescript": "^3.7.5"
   },
   "devDependencies": {
+    "@types/express": "^4.17.13",
     "@types/node": "^13.5.0",
     "@typescript-eslint/eslint-plugin": "^5.8.0",
     "@typescript-eslint/parser": "^5.8.0",

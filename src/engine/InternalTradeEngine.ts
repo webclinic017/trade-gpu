@@ -86,7 +86,7 @@ export default class InternalTradeEngine {
           config.to,
           config.from,
         ),
-        this.ordersHolders.list(config.from, config.to),
+        this.ordersHolders.fetch(config.from, config.to),
       ]);
 
       const configuration = this.currency(config.from, config.to);

@@ -8,6 +8,11 @@ export default class Orders {
     private loaded;
     private orders;
     constructor(exchange: AbstractExchange, database: Database);
-    list(from: Devise, to: Devise): Promise<Order[]>;
+    list(from: Devise, to: Devise): Promise<{
+        from: Devise;
+        to: Devise;
+        orders: Order[];
+    }>;
+    fetch(from: Devise, to: Devise): Promise<Order[]>;
     private internalList;
 }

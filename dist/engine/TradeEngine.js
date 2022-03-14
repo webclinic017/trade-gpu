@@ -27,7 +27,7 @@ class TradeEngine extends InternalTradeEngine_1.default {
             try {
                 const results = yield Promise.all([
                     ticks_1.default.last(this.database(), this.exchange.name(), config.to, config.from),
-                    this.ordersHolders.list(config.from, config.to),
+                    this.ordersHolders.fetch(config.from, config.to),
                 ]);
                 const configuration = this.currency(config.from, config.to);
                 if (!configuration)
@@ -184,7 +184,7 @@ class TradeEngine extends InternalTradeEngine_1.default {
                         .toNumber();
                     this.log(`finalAmount amount:${finalAmount} finalPriceToBuy ${finalPriceToBuy}`);
                     yield this.exchange.place_order(config.to, config.from, 'buy', finalAmount, finalPriceToBuy);
-                    const newOrders = yield this.ordersHolders.list(config.from, config.to);
+                    const newOrders = yield this.ordersHolders.fetch(config.from, config.to);
                     this.log('new orders := ', newOrders.map((o) => o.str()));
                     return true;
                 }
@@ -251,7 +251,7 @@ class TradeEngine extends InternalTradeEngine_1.default {
                         .toNumber();
                     this.log(`amount ? ${amount} / placePrice ? ${placePrice}`);
                     yield this.exchange.place_order(config.to, config.from, 'sell', amount, placePrice);
-                    orders = yield this.ordersHolders.list(config.from, config.to);
+                    orders = yield this.ordersHolders.fetch(config.from, config.to);
                     this.log('now orders := ', orders.map((o) => o.str()));
                     return true;
                 }

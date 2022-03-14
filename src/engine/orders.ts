@@ -29,7 +29,19 @@ export default class Orders {
     this.orders = [];
   }
 
-  public async list(from: Devise, to: Devise): Promise<Order[]> {
+  public async list(
+    from: Devise,
+    to: Devise,
+  ): Promise<{ from: Devise; to: Devise; orders: Order[] }> {
+    try {
+      const orders = await this.internalList(from, to);
+      return { from, to, orders };
+    } catch (err) {
+      return { from, to, orders: [] };
+    }
+  }
+
+  public async fetch(from: Devise, to: Devise): Promise<Order[]> {
     await this.internalList(from, to);
     const shortOrders = await this.exchange.open_orders();
 

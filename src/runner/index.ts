@@ -4,10 +4,12 @@ import Orders from '../engine/orders';
 import { Devise, DeviseNames } from '../exchanges/defs';
 import { getDeviseConfigArray } from './DeviceConfigArray';
 import { getTradeConfigArray } from './TradeConfigArray';
-import cex from '../exchanges/cex';
 import { AbstractExchange } from '../exchanges/AbstractExchange';
+import Order from '../database/models/order';
 
 export class Runner {
+  private pairs: [Devise, Devise][] = [];
+
   private tickHolder: TickHolder;
 
   private ordersHolders: Orders;
@@ -20,30 +22,44 @@ export class Runner {
     const decimals = getDeviseConfigArray();
     decimals.forEach((d) => devises.set(d.name, d));
 
-    this.tickHolder = new TickHolder(cex);
-    this.ordersHolders = new Orders(cex, this.tickHolder.database());
+    this.tickHolder = new TickHolder(exchange);
+    this.ordersHolders = new Orders(exchange, this.tickHolder.database());
 
     this.tradeEngine = new TradeEngine(
       devises,
       configs,
-      cex,
+      exchange,
       this.tickHolder,
       this.ordersHolders,
     );
 
-    [
+    this.pairs = [
       ...DeviseNames.map((crypto) => ['EUR', crypto] as [Devise, Devise]),
       ...DeviseNames.map((crypto) => ['USD', crypto] as [Devise, Devise]),
-    ].forEach((tuple) => this.tickHolder.register(tuple[0], tuple[1]));
+    ].filter(([left, right]) => left !== right);
+
+    this.pairs.forEach(([left, right]) => this.tickHolder.register(left, right));
   }
 
-  public start() {
-    this.tickHolder
-      .start()
-      .then(() => {
-        console.log(`${this.exchange.name()} trade engine starting...`);
-        this.tradeEngine.start();
-      })
-      .catch((err) => console.log(err));
+  public async orders(): Promise<
+    { from: Devise; to: Devise; orders: Order[] }[]
+    > {
+    try {
+      return Promise.all(
+        this.pairs.map(([left, right]) => this.ordersHolders.list(left, right)),
+      );
+    } catch (err) {
+      return [];
+    }
+  }
+
+  public async start() {
+    try {
+      await this.tickHolder.start();
+      console.log(`${this.exchange.name()} trade engine starting...`);
+      this.tradeEngine.start();
+    } catch (err) {
+      console.error('starting error', err);
+    }
   }
 }

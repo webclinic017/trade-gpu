@@ -45,6 +45,17 @@ class Orders {
     }
     list(from, to) {
         return __awaiter(this, void 0, void 0, function* () {
+            try {
+                const orders = yield this.internalList(from, to);
+                return { from, to, orders };
+            }
+            catch (err) {
+                return { from, to, orders: [] };
+            }
+        });
+    }
+    fetch(from, to) {
+        return __awaiter(this, void 0, void 0, function* () {
             yield this.internalList(from, to);
             const shortOrders = yield this.exchange.open_orders();
             const obtainedOrders = shortOrders.map((o) => order_1.default.from(o, this.exchange.name()));

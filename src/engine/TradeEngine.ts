@@ -53,7 +53,7 @@ export default class TradeEngine extends InternalTradeEngine {
           config.to,
           config.from,
         ),
-        this.ordersHolders.list(config.from, config.to),
+        this.ordersHolders.fetch(config.from, config.to),
       ]);
 
       const configuration = this.currency(config.from, config.to);
@@ -248,7 +248,10 @@ export default class TradeEngine extends InternalTradeEngine {
           finalPriceToBuy,
         );
 
-        const newOrders = await this.ordersHolders.list(config.from, config.to);
+        const newOrders = await this.ordersHolders.fetch(
+          config.from,
+          config.to,
+        );
         this.log(
           'new orders := ',
           newOrders.map((o) => o.str()),
@@ -343,7 +346,7 @@ export default class TradeEngine extends InternalTradeEngine {
           placePrice,
         );
 
-        orders = await this.ordersHolders.list(config.from, config.to);
+        orders = await this.ordersHolders.fetch(config.from, config.to);
         this.log(
           'now orders := ',
           orders.map((o) => o.str()),
