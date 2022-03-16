@@ -80,7 +80,7 @@ export class Database {
     }
   }
 
-  public list<TYPE extends Model>(
+  public list<TYPE>(
     table: Table,
     create: (row: any) => TYPE,
     where?: WhereTuple[],
@@ -127,7 +127,7 @@ export class Database {
     );
   }
 
-  private executeWhere<TYPE extends Model>(
+  private executeWhere<TYPE>(
     table: Table,
     query: string,
     values: any[],

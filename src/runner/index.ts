@@ -53,8 +53,12 @@ export class Runner {
     }
   }
 
-  public async wallets(from?: Date, to?: Date, raw?: boolean) {
-    return this.tradeEngine.wallets(from, to, raw);
+  public async wallets(from?: Date, to?: Date) {
+    return this.tradeEngine.wallets(from, to);
+  }
+
+  public async walletsRaw(from?: Date, to?: Date) {
+    return this.tradeEngine.walletsRaw(from, to);
   }
 
   public async start() {

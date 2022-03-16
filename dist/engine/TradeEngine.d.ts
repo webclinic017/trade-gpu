@@ -13,6 +13,7 @@ export default class TradeEngine extends InternalTradeEngine {
     private manageBuyingOrder;
     private manageSellingOrder;
     wallets(from?: Date, to?: Date, raw?: boolean): Promise<Wallet[]>;
+    walletsRaw(from?: Date, to?: Date): Promise<import("../database/models/wallet").WalletRaw[]>;
     private manageWallets;
     private afterTickStarted;
 }

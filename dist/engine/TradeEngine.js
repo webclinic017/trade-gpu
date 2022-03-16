@@ -267,9 +267,12 @@ class TradeEngine extends InternalTradeEngine_1.default {
     }
     wallets(from, to, raw) {
         return __awaiter(this, void 0, void 0, function* () {
-            if (!!raw)
-                return wallet_1.default.listRaw(this.database(), this.exchange.name(), from, to);
             return wallet_1.default.list(this.database(), this.exchange.name(), from, to);
+        });
+    }
+    walletsRaw(from, to) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return wallet_1.default.listRaw(this.database(), this.exchange.name(), from, to);
         });
     }
     manageWallets(array) {

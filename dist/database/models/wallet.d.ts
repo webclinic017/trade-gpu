@@ -2,6 +2,14 @@ import { BigNumber } from 'bignumber.js';
 import Model from './model';
 import { Database, Table } from '..';
 export declare const WalletTable: Table;
+export interface WalletRaw {
+    id: number;
+    exchange: string;
+    timestamp: number;
+    devise: string;
+    expected_amount: string;
+    current_amount: string;
+}
 export default class Wallet extends Model {
     exchange: string;
     timestamp: BigNumber;
@@ -10,7 +18,7 @@ export default class Wallet extends Model {
     currentAmount: BigNumber;
     id?: number | undefined;
     static list(database: Database, exchange: string, from?: Date, to?: Date): Promise<Wallet[]>;
-    static listRaw(database: Database, exchange: string, from?: Date, to?: Date): Promise<Wallet[]>;
+    static listRaw(database: Database, exchange: string, from?: Date, to?: Date): Promise<WalletRaw[]>;
     private static listCallback;
     static last(database: Database, exchange: string): Promise<Wallet>;
     static fromRow(h: any): Wallet;

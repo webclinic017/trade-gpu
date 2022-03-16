@@ -61,27 +61,36 @@ export default class WalletAggregation {
     const endOf = date.clone().endOf('month');
     const days = startOf.daysInMonth();
 
-    const wallets = await runner.wallets(startOf.toDate(), endOf.toDate());
+    const wallets = await runner.walletsRaw(startOf.toDate(), endOf.toDate());
 
-    wallets.forEach(({
-      expectedAmount, currentAmount, timestamp, devise,
-    }) => {
-      const date = moment(Number.parseInt(timestamp.toFixed()));
-      if (date.get('month') !== this.month || date.get('year') !== this.year) return;
+    wallets.forEach(
+      ({
+        // eslint-disable-next-line camelcase
+        expected_amount,
+        // eslint-disable-next-line camelcase
+        current_amount,
+        timestamp,
+        devise,
+      }) => {
+        const date = moment(Number.parseInt(timestamp.toFixed()));
+        if (date.get('month') !== this.month || date.get('year') !== this.year) return;
 
-      const day = date.day() - 1;
-      const holder = getOrCreate(devise, this.dayInfos, day, days);
+        const day = date.day() - 1;
+        const holder = getOrCreate(devise, this.dayInfos, day, days);
+        const expectedTransformed = Number.parseInt(expected_amount);
+        const currentTransformed = Number.parseInt(current_amount);
 
-      if (expectedAmount.isLessThan(holder.expectedMin)) holder.expectedMin = expectedAmount.toNumber();
-      if (currentAmount.isLessThan(holder.currentMin)) holder.currentMin = currentAmount.toNumber();
-      if (expectedAmount.isGreaterThan(holder.expectedMax)) holder.expectedMax = expectedAmount.toNumber();
-      if (currentAmount.isLessThan(holder.currentMax)) holder.currentMax = currentAmount.toNumber();
-      holder.expectedAvg += expectedAmount.toNumber();
-      holder.currentAvg += currentAmount.toNumber();
-      holder.cardinal++;
-      holder.expectedAvg /= holder.cardinal;
-      holder.currentAvg /= holder.cardinal;
-    });
+        if (expectedTransformed < holder.expectedMin) holder.expectedMin = expectedTransformed;
+        if (currentTransformed < holder.currentMin) holder.currentMin = currentTransformed;
+        if (expectedTransformed > holder.expectedMax) holder.expectedMax = expectedTransformed;
+        if (currentTransformed > holder.currentMax) holder.currentMax = currentTransformed;
+        holder.expectedAvg += expectedTransformed;
+        holder.currentAvg += currentTransformed;
+        holder.cardinal++;
+        holder.expectedAvg /= holder.cardinal;
+        holder.currentAvg /= holder.cardinal;
+      },
+    );
   }
 
   json() {

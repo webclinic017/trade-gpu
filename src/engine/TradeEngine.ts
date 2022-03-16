@@ -365,8 +365,11 @@ export default class TradeEngine extends InternalTradeEngine {
   }
 
   public async wallets(from?: Date, to?: Date, raw?: boolean) {
-    if (raw) return Wallet.listRaw(this.database(), this.exchange.name(), from, to);
     return Wallet.list(this.database(), this.exchange.name(), from, to);
+  }
+
+  public async walletsRaw(from?: Date, to?: Date) {
+    return Wallet.listRaw(this.database(), this.exchange.name(), from, to);
   }
 
   private async manageWallets(array: DeviseValue) {

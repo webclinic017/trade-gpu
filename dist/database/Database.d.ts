@@ -11,7 +11,7 @@ export declare class Database {
     database: sqlite3.Database;
     constructor(name: string);
     save(name: string, pairs: [string, any, boolean?][], log: boolean, onId?: (id: number) => void, id?: number): void;
-    list<TYPE extends Model>(table: Table, create: (row: any) => TYPE, where?: WhereTuple[]): Promise<TYPE[]>;
+    list<TYPE>(table: Table, create: (row: any) => TYPE, where?: WhereTuple[]): Promise<TYPE[]>;
     lastWhere<TYPE extends Model>(table: Table, columns: string[], values: any[], create: (r: any) => TYPE): Promise<TYPE>;
     private executeWhere;
     last<TYPE extends Model>(table: Table, create: (r: any) => TYPE): Promise<TYPE | null>;

@@ -33,7 +33,7 @@ class Wallet extends model_1.default {
         return Wallet.listCallback(database, exchange, (r) => Wallet.fromRow(r), from, to);
     }
     static listRaw(database, exchange, from, to) {
-        return Wallet.listCallback(database, exchange, r => r, from, to);
+        return Wallet.listCallback(database, exchange, (r) => r, from, to);
     }
     static listCallback(database, exchange, transform, from, to) {
         const args = [

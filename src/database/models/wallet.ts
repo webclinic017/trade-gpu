@@ -20,6 +20,15 @@ export const WalletTable = table;
 
 const b = (value: any) => new BigNumber(value);
 
+export interface WalletRaw {
+  id: number;
+  exchange: string;
+  timestamp: number;
+  devise: string;
+  expected_amount: string;
+  current_amount: string;
+}
+
 export default class Wallet extends Model {
   static list(
     database: Database,
@@ -27,7 +36,7 @@ export default class Wallet extends Model {
     from?: Date,
     to?: Date,
   ): Promise<Wallet[]> {
-    return Wallet.listCallback(
+    return Wallet.listCallback<Wallet>(
       database,
       exchange,
       (r) => Wallet.fromRow(r),
@@ -41,17 +50,17 @@ export default class Wallet extends Model {
     exchange: string,
     from?: Date,
     to?: Date,
-  ): Promise<Wallet[]> {
-    return Wallet.listCallback(database, exchange, (r) => r, from, to);
+  ): Promise<WalletRaw[]> {
+    return Wallet.listCallback<WalletRaw>(database, exchange, (r) => r, from, to);
   }
 
-  private static listCallback(
+  private static listCallback<T>(
     database: Database,
     exchange: string,
-    transform: (row: any) => any,
+    transform: (row: any) => T,
     from?: Date,
     to?: Date,
-  ): Promise<Wallet[]> {
+  ): Promise<T[]> {
     const args: WhereTuple[] = [
       {
         column: 'exchange',
