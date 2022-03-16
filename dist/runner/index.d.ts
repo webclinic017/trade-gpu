@@ -2,12 +2,12 @@ import { Devise } from '../exchanges/defs';
 import { AbstractExchange } from '../exchanges/AbstractExchange';
 import Order from '../database/models/order';
 export declare class Runner {
-    private exchange;
+    private exchangeObject;
     private pairs;
     private tickHolder;
     private ordersHolders;
     private tradeEngine;
-    constructor(exchange: AbstractExchange);
+    constructor(exchangeObject: AbstractExchange);
     orders(): Promise<{
         from: Devise;
         to: Devise;
@@ -15,4 +15,5 @@ export declare class Runner {
     }[]>;
     wallets(from?: Date, to?: Date): Promise<import("../database/models/wallet").default[]>;
     start(): Promise<void>;
+    exchange(): string;
 }

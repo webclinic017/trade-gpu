@@ -18,6 +18,7 @@ const express_1 = __importDefault(require("express"));
 const fs_1 = __importDefault(require("fs"));
 const dgram_1 = __importDefault(require("dgram"));
 const server_1 = __importDefault(require("../config/server"));
+const WalletAggregation_1 = __importDefault(require("./WalletAggregation"));
 class Server {
     constructor(runner) {
         this.runner = runner;
@@ -38,17 +39,14 @@ class Server {
                 res.status(500).json({ err: `${err}` });
             }
         }));
-        this.app.get('/wallets/:from/:to', (req, res) => __awaiter(this, void 0, void 0, function* () {
+        this.app.get('/wallets/:month/:year', (req, res) => __awaiter(this, void 0, void 0, function* () {
             var _a, _b;
             try {
-                var from = Number.parseInt((_a = req === null || req === void 0 ? void 0 : req.params) === null || _a === void 0 ? void 0 : _a.from);
-                var to = Number.parseInt((_b = req === null || req === void 0 ? void 0 : req.params) === null || _b === void 0 ? void 0 : _b.to);
-                if (!from || Number.isNaN(from))
-                    from = 0;
-                if (!to || Number.isNaN(to))
-                    to = 0;
-                const wallets = yield runner.wallets(new Date(from), new Date(to));
-                res.json(wallets.map((w) => w.json()));
+                let month = Number.parseInt((_a = req === null || req === void 0 ? void 0 : req.params) === null || _a === void 0 ? void 0 : _a.month);
+                let year = Number.parseInt((_b = req === null || req === void 0 ? void 0 : req.params) === null || _b === void 0 ? void 0 : _b.year);
+                const aggregat = new WalletAggregation_1.default(runner.exchange(), month, year);
+                yield aggregat.load(runner);
+                res.json(aggregat.json());
             }
             catch (err) {
                 res.status(500).json({ err: `${err}` });

@@ -36,7 +36,8 @@
         "no-unused-expressions": "off",
         "no-unused-vars": "off",
         "no-useless-constructor": "off",
-        "no-empty-function": "off"
+        "no-empty-function": "off",
+        "max-len": "off"
     },
     "settings": {
       "import/resolver": {

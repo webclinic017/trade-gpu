@@ -20,16 +20,16 @@ const defs_1 = require("../exchanges/defs");
 const DeviceConfigArray_1 = require("./DeviceConfigArray");
 const TradeConfigArray_1 = require("./TradeConfigArray");
 class Runner {
-    constructor(exchange) {
-        this.exchange = exchange;
+    constructor(exchangeObject) {
+        this.exchangeObject = exchangeObject;
         this.pairs = [];
         const configs = TradeConfigArray_1.getTradeConfigArray();
         const devises = new Map();
         const decimals = DeviceConfigArray_1.getDeviseConfigArray();
         decimals.forEach((d) => devises.set(d.name, d));
-        this.tickHolder = new TickHolder_1.default(exchange);
-        this.ordersHolders = new orders_1.default(exchange, this.tickHolder.database());
-        this.tradeEngine = new TradeEngine_1.default(devises, configs, exchange, this.tickHolder, this.ordersHolders);
+        this.tickHolder = new TickHolder_1.default(exchangeObject);
+        this.ordersHolders = new orders_1.default(exchangeObject, this.tickHolder.database());
+        this.tradeEngine = new TradeEngine_1.default(devises, configs, exchangeObject, this.tickHolder, this.ordersHolders);
         this.pairs = [
             ...defs_1.DeviseNames.map((crypto) => ['EUR', crypto]),
             ...defs_1.DeviseNames.map((crypto) => ['USD', crypto]),
@@ -55,13 +55,16 @@ class Runner {
         return __awaiter(this, void 0, void 0, function* () {
             try {
                 yield this.tickHolder.start();
-                console.log(`${this.exchange.name()} trade engine starting...`);
+                console.log(`${this.exchange()} trade engine starting...`);
                 this.tradeEngine.start();
             }
             catch (err) {
                 console.error('starting error', err);
             }
         });
+    }
+    exchange() {
+        return this.exchangeObject.name();
     }
 }
 exports.Runner = Runner;

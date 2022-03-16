@@ -4,6 +4,7 @@ import fs from 'fs';
 import dgram from 'dgram';
 import { Runner } from '../runner';
 import config from '../config/server';
+import WalletAggregation from './WalletAggregation';
 
 export class Server {
   private server: https.Server;
@@ -42,15 +43,14 @@ export class Server {
       }
     });
 
-    this.app.get('/wallets/:from/:to', async (req, res) => {
+    this.app.get('/wallets/:month/:year', async (req, res) => {
       try {
-        let from = Number.parseInt(req?.params?.from);
-        let to = Number.parseInt(req?.params?.to);
-        if (!from || Number.isNaN(from)) from = 0;
-        if (!to || Number.isNaN(to)) to = 0;
+        const month = Number.parseInt(req?.params?.month);
+        const year = Number.parseInt(req?.params?.year);
+        const aggregat = new WalletAggregation(runner.exchange(), month, year);
 
-        const wallets = await runner.wallets(new Date(from), new Date(to));
-        res.json(wallets.map((w) => w.json()));
+        await aggregat.load(runner);
+        res.json(aggregat.json());
       } catch (err) {
         res.status(500).json({ err: `${err}` });
       }

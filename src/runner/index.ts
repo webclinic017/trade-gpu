@@ -16,19 +16,19 @@ export class Runner {
 
   private tradeEngine: TradeEngine;
 
-  public constructor(private exchange: AbstractExchange) {
+  public constructor(private exchangeObject: AbstractExchange) {
     const configs = getTradeConfigArray();
     const devises: Map<Devise, DeviseConfig> = new Map<Devise, DeviseConfig>();
     const decimals = getDeviseConfigArray();
     decimals.forEach((d) => devises.set(d.name, d));
 
-    this.tickHolder = new TickHolder(exchange);
-    this.ordersHolders = new Orders(exchange, this.tickHolder.database());
+    this.tickHolder = new TickHolder(exchangeObject);
+    this.ordersHolders = new Orders(exchangeObject, this.tickHolder.database());
 
     this.tradeEngine = new TradeEngine(
       devises,
       configs,
-      exchange,
+      exchangeObject,
       this.tickHolder,
       this.ordersHolders,
     );
@@ -60,10 +60,14 @@ export class Runner {
   public async start() {
     try {
       await this.tickHolder.start();
-      console.log(`${this.exchange.name()} trade engine starting...`);
+      console.log(`${this.exchange()} trade engine starting...`);
       this.tradeEngine.start();
     } catch (err) {
       console.error('starting error', err);
     }
+  }
+
+  public exchange() {
+    return this.exchangeObject.name();
   }
 }
