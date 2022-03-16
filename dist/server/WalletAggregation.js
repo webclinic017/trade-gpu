@@ -62,7 +62,7 @@ class WalletAggregation {
                 const date = moment_1.default(Number.parseInt(timestamp.toFixed()));
                 if (date.get('month') !== this.month || date.get('year') !== this.year)
                     return;
-                const day = date.day() - 1;
+                const day = date.date() - 1;
                 const holder = getOrCreate(devise, this.dayInfos, day, days);
                 const expectedTransformed = Number.parseInt(expected_amount);
                 const currentTransformed = Number.parseInt(current_amount);
