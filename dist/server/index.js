@@ -28,7 +28,11 @@ class Server {
         this.app.get('/orders', (req, res) => __awaiter(this, void 0, void 0, function* () {
             try {
                 const orders = yield runner.orders();
-                res.json(orders.map(({ from, to, orders }) => ({ from, to, orders: orders.map(o => o.json()) })));
+                res.json(orders.map(({ from, to, orders }) => ({
+                    from,
+                    to,
+                    orders: orders.map((o) => o.json()),
+                })));
             }
             catch (err) {
                 res.status(500).json({ err: `${err}` });
@@ -37,7 +41,7 @@ class Server {
         this.app.get('/wallets', (req, res) => __awaiter(this, void 0, void 0, function* () {
             try {
                 const wallets = yield runner.wallets();
-                res.json(wallets.map(w => w.json()));
+                res.json(wallets.map((w) => w.json()));
             }
             catch (err) {
                 res.status(500).json({ err: `${err}` });

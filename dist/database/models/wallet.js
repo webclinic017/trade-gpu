@@ -29,6 +29,12 @@ class Wallet extends model_1.default {
         this.currentAmount = currentAmount;
         this.id = id;
     }
+    static where(database, exchange, from, to) {
+        return database.list(exports.WalletTable, (r) => Wallet.fromRow(r), {
+            columns: ['exchange'],
+            values: [exchange],
+        });
+    }
     static list(database, exchange) {
         return database.list(exports.WalletTable, (r) => Wallet.fromRow(r), {
             columns: ['exchange'],
@@ -39,7 +45,7 @@ class Wallet extends model_1.default {
         return database.lastWhere(exports.WalletTable, ['exchange'], [exchange], (r) => Wallet.fromRow(r));
     }
     static fromRow(h) {
-        return new Wallet(h.exchange, b(h.timestamp), h.devise, b(h.expectedAmount), b(h.currentAmount), h.id);
+        return new Wallet(h.exchange, b(h.timestamp), h.devise, b(h.expected_amount), b(h.current_amount), h.id);
     }
     isIn(orders) {
         return (orders.filter((o) => o.timestamp && o.timestamp.isEqualTo(this.timestamp))

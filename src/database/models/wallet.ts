@@ -20,6 +20,18 @@ export const WalletTable = table;
 const b = (value: any) => new BigNumber(value);
 
 export default class Wallet extends Model {
+  static where(
+    database: Database,
+    exchange: string,
+    from: number,
+    to: number,
+  ): Promise<Wallet[]> {
+    return database.list(WalletTable, (r) => Wallet.fromRow(r), {
+      columns: ['exchange'],
+      values: [exchange],
+    });
+  }
+
   static list(database: Database, exchange: string): Promise<Wallet[]> {
     return database.list(WalletTable, (r) => Wallet.fromRow(r), {
       columns: ['exchange'],
@@ -36,8 +48,8 @@ export default class Wallet extends Model {
       h.exchange,
       b(h.timestamp),
       h.devise,
-      b(h.expectedAmount),
-      b(h.currentAmount),
+      b(h.expected_amount),
+      b(h.current_amount),
       h.id,
     );
   }

@@ -9,6 +9,7 @@ export default class Wallet extends Model {
     expectedAmount: BigNumber;
     currentAmount: BigNumber;
     id?: number | undefined;
+    static where(database: Database, exchange: string, from: number, to: number): Promise<Wallet[]>;
     static list(database: Database, exchange: string): Promise<Wallet[]>;
     static last(database: Database, exchange: string): Promise<Wallet>;
     static fromRow(h: any): Wallet;
