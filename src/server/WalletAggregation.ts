@@ -16,8 +16,8 @@ function create(): DayInfo {
   return {
     expectedMax: 0,
     currentMax: 0,
-    expectedMin: 0,
-    currentMin: 0,
+    expectedMin: Number.MAX_VALUE,
+    currentMin: Number.MAX_VALUE,
     expectedAvg: 0,
     currentAvg: 0,
     cardinal: 0,
