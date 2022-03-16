@@ -93,6 +93,14 @@ export default class WalletAggregation {
         holder.currentAvg /= holder.cardinal;
       },
     );
+
+    Object.keys(this.dayInfos).forEach((key) => {
+      const holder = this.dayInfos[key];
+      holder.forEach((info) => {
+        if (info.expectedMin === Number.MAX_VALUE) info.expectedMin = 0;
+        if (info.currentMin === Number.MAX_VALUE) info.currentMin = 0;
+      });
+    });
   }
 
   json() {
