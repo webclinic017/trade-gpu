@@ -27,9 +27,9 @@ function create() {
 function getOrCreate(devise, dayInfos, day, days) {
     if (dayInfos[devise])
         return dayInfos[devise][day];
-    var array = [];
+    const array = [];
     dayInfos[devise] = array;
-    for (var i = 0; i < days; i++)
+    for (let i = 0; i < days; i++)
         array.push(create());
     return array[day];
 }
@@ -42,7 +42,7 @@ class WalletAggregation {
     }
     load(runner) {
         return __awaiter(this, void 0, void 0, function* () {
-            //artifically create the expected number of info to fetch
+            // artifically create the expected number of info to fetch
             const date = moment_1.default()
                 .set('year', this.year)
                 .set('day', 1)
@@ -51,7 +51,7 @@ class WalletAggregation {
             const endOf = date.clone().endOf('month');
             const days = startOf.daysInMonth();
             const wallets = yield runner.wallets(startOf.toDate(), endOf.toDate());
-            wallets.forEach(({ expectedAmount, currentAmount, timestamp, devise }) => {
+            wallets.forEach(({ expectedAmount, currentAmount, timestamp, devise, }) => {
                 const date = moment_1.default(Number.parseInt(timestamp.toFixed()));
                 if (date.get('month') !== this.month || date.get('year') !== this.year)
                     return;

@@ -364,7 +364,8 @@ export default class TradeEngine extends InternalTradeEngine {
     throw 'out of the loop without either error or request sent... ?';
   }
 
-  public async wallets(from?: Date, to?: Date) {
+  public async wallets(from?: Date, to?: Date, raw?: boolean) {
+    if (raw) return Wallet.listRaw(this.database(), this.exchange.name(), from, to);
     return Wallet.list(this.database(), this.exchange.name(), from, to);
   }
 

@@ -46,9 +46,9 @@ class Runner {
             }
         });
     }
-    wallets(from, to) {
+    wallets(from, to, raw) {
         return __awaiter(this, void 0, void 0, function* () {
-            return this.tradeEngine.wallets(from, to);
+            return this.tradeEngine.wallets(from, to, raw);
         });
     }
     start() {

@@ -45,8 +45,9 @@ export class Server {
 
     this.app.get('/wallets/:month/:year', async (req, res) => {
       try {
-        const month = Number.parseInt(req?.params?.month);
+        const month = Number.parseInt(req?.params?.month) - 1;
         const year = Number.parseInt(req?.params?.year);
+
         const aggregat = new WalletAggregation(runner.exchange(), month, year);
 
         await aggregat.load(runner);

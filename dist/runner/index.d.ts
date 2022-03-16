@@ -13,7 +13,7 @@ export declare class Runner {
         to: Devise;
         orders: Order[];
     }[]>;
-    wallets(from?: Date, to?: Date): Promise<import("../database/models/wallet").default[]>;
+    wallets(from?: Date, to?: Date, raw?: boolean): Promise<import("../database/models/wallet").default[]>;
     start(): Promise<void>;
     exchange(): string;
 }

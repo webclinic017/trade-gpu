@@ -10,6 +10,8 @@ export default class Wallet extends Model {
     currentAmount: BigNumber;
     id?: number | undefined;
     static list(database: Database, exchange: string, from?: Date, to?: Date): Promise<Wallet[]>;
+    static listRaw(database: Database, exchange: string, from?: Date, to?: Date): Promise<Wallet[]>;
+    private static listCallback;
     static last(database: Database, exchange: string): Promise<Wallet>;
     static fromRow(h: any): Wallet;
     constructor(exchange: string, timestamp: BigNumber, devise: string, expectedAmount: BigNumber, currentAmount: BigNumber, id?: number | undefined);

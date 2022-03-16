@@ -42,8 +42,8 @@ class Server {
         this.app.get('/wallets/:month/:year', (req, res) => __awaiter(this, void 0, void 0, function* () {
             var _a, _b;
             try {
-                let month = Number.parseInt((_a = req === null || req === void 0 ? void 0 : req.params) === null || _a === void 0 ? void 0 : _a.month);
-                let year = Number.parseInt((_b = req === null || req === void 0 ? void 0 : req.params) === null || _b === void 0 ? void 0 : _b.year);
+                const month = Number.parseInt((_a = req === null || req === void 0 ? void 0 : req.params) === null || _a === void 0 ? void 0 : _a.month) - 1;
+                const year = Number.parseInt((_b = req === null || req === void 0 ? void 0 : req.params) === null || _b === void 0 ? void 0 : _b.year);
                 const aggregat = new WalletAggregation_1.default(runner.exchange(), month, year);
                 yield aggregat.load(runner);
                 res.json(aggregat.json());

@@ -27,6 +27,31 @@ export default class Wallet extends Model {
     from?: Date,
     to?: Date,
   ): Promise<Wallet[]> {
+    return Wallet.listCallback(
+      database,
+      exchange,
+      (r) => Wallet.fromRow(r),
+      from,
+      to,
+    );
+  }
+
+  static listRaw(
+    database: Database,
+    exchange: string,
+    from?: Date,
+    to?: Date,
+  ): Promise<Wallet[]> {
+    return Wallet.listCallback(database, exchange, (r) => r, from, to);
+  }
+
+  private static listCallback(
+    database: Database,
+    exchange: string,
+    transform: (row: any) => any,
+    from?: Date,
+    to?: Date,
+  ): Promise<Wallet[]> {
     const args: WhereTuple[] = [
       {
         column: 'exchange',
@@ -48,7 +73,7 @@ export default class Wallet extends Model {
         value: to.getTime(),
       });
     }
-    return database.list(WalletTable, (r) => Wallet.fromRow(r), args);
+    return database.list(WalletTable, transform, args);
   }
 
   static last(database: Database, exchange: string): Promise<Wallet> {

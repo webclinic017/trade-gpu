@@ -30,6 +30,12 @@ class Wallet extends model_1.default {
         this.id = id;
     }
     static list(database, exchange, from, to) {
+        return Wallet.listCallback(database, exchange, (r) => Wallet.fromRow(r), from, to);
+    }
+    static listRaw(database, exchange, from, to) {
+        return Wallet.listCallback(database, exchange, r => r, from, to);
+    }
+    static listCallback(database, exchange, transform, from, to) {
         const args = [
             {
                 column: 'exchange',
@@ -51,7 +57,7 @@ class Wallet extends model_1.default {
                 value: to.getTime(),
             });
         }
-        return database.list(exports.WalletTable, (r) => Wallet.fromRow(r), args);
+        return database.list(exports.WalletTable, transform, args);
     }
     static last(database, exchange) {
         return database.lastWhere(exports.WalletTable, ['exchange'], [exchange], (r) => Wallet.fromRow(r));
