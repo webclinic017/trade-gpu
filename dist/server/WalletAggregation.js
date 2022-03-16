@@ -25,13 +25,16 @@ function create() {
     };
 }
 function getOrCreate(devise, dayInfos, day, days) {
-    if (dayInfos[devise])
+    if (dayInfos[devise] && dayInfos[devise][day])
         return dayInfos[devise][day];
     const array = [];
     dayInfos[devise] = array;
     for (let i = 0; i < days; i++)
         array.push(create());
-    return array[day];
+    const result = array[day];
+    if (!result)
+        throw `${day} is out of range from ${days}`;
+    return result;
 }
 class WalletAggregation {
     constructor(exchange, month, year) {

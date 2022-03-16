@@ -34,12 +34,14 @@ function getOrCreate(
   day: number,
   days: number,
 ): DayInfo {
-  if (dayInfos[devise]) return dayInfos[devise][day];
+  if (dayInfos[devise] && dayInfos[devise][day]) return dayInfos[devise][day];
 
   const array: DayInfo[] = [];
   dayInfos[devise] = array;
   for (let i = 0; i < days; i++) array.push(create());
-  return array[day];
+  const result = array[day];
+  if (!result) throw `${day} is out of range from ${days}`;
+  return result;
 }
 
 export default class WalletAggregation {
