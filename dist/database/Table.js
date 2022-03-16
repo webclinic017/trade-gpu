@@ -20,7 +20,9 @@ class Table {
     list(options) {
         const columns = this.columns.map((c) => c.name).join(',');
         if (options && options.length > 0) {
-            const whereColumns = options.map((c) => `${c}=?`).join(' AND ');
+            const whereColumns = options
+                .map((c) => `${c.column}${c.operator}?`)
+                .join(' AND ');
             return `SELECT ${columns} FROM ${this.name} WHERE ${whereColumns} ORDER BY id`;
         }
         return `SELECT ${columns} FROM ${this.name} ORDER BY id`;

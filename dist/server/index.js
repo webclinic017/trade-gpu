@@ -38,9 +38,16 @@ class Server {
                 res.status(500).json({ err: `${err}` });
             }
         }));
-        this.app.get('/wallets', (req, res) => __awaiter(this, void 0, void 0, function* () {
+        this.app.get('/wallets/:from/:to', (req, res) => __awaiter(this, void 0, void 0, function* () {
+            var _a, _b;
             try {
-                const wallets = yield runner.wallets();
+                var from = Number.parseInt((_a = req === null || req === void 0 ? void 0 : req.params) === null || _a === void 0 ? void 0 : _a.from);
+                var to = Number.parseInt((_b = req === null || req === void 0 ? void 0 : req.params) === null || _b === void 0 ? void 0 : _b.to);
+                if (!from || Number.isNaN(from))
+                    from = 0;
+                if (!to || Number.isNaN(to))
+                    to = 0;
+                const wallets = yield runner.wallets(new Date(from), new Date(to));
                 res.json(wallets.map((w) => w.json()));
             }
             catch (err) {

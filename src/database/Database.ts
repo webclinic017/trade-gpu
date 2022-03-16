@@ -2,6 +2,12 @@ import sqlite3 from 'sqlite3';
 import { Table } from './Table';
 import Model from './models/model';
 
+export interface WhereTuple {
+  column: string;
+  operator: '=' | '<' | '>';
+  value: any;
+}
+
 export class Database {
   name: string;
 
@@ -77,13 +83,17 @@ export class Database {
   public list<TYPE extends Model>(
     table: Table,
     create: (row: any) => TYPE,
-    where?: { columns: string[]; values: any[] },
+    where?: WhereTuple[],
   ): Promise<TYPE[]> {
     if (where) {
       return this.executeWhere(
         table,
-        table.list(where.columns),
-        where.values,
+        table.list(
+          where
+            ? where.map(({ column, operator }) => ({ column, operator }))
+            : undefined,
+        ),
+        where?.map(({ value }) => value),
         create,
       );
     }

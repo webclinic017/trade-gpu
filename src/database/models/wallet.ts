@@ -3,6 +3,7 @@ import Model from './model';
 import {
   Database, Table, Column, Options,
 } from '..';
+import { WhereTuple } from '../Database';
 
 const table = new Table('wallet');
 const row: [string, string, Options][] = [
@@ -20,23 +21,34 @@ export const WalletTable = table;
 const b = (value: any) => new BigNumber(value);
 
 export default class Wallet extends Model {
-  static where(
+  static list(
     database: Database,
     exchange: string,
-    from: number,
-    to: number,
+    from?: Date,
+    to?: Date,
   ): Promise<Wallet[]> {
-    return database.list(WalletTable, (r) => Wallet.fromRow(r), {
-      columns: ['exchange'],
-      values: [exchange],
-    });
-  }
-
-  static list(database: Database, exchange: string): Promise<Wallet[]> {
-    return database.list(WalletTable, (r) => Wallet.fromRow(r), {
-      columns: ['exchange'],
-      values: [exchange],
-    });
+    const args: WhereTuple[] = [
+      {
+        column: 'exchange',
+        operator: '=',
+        value: exchange,
+      },
+    ];
+    if (from) {
+      args.push({
+        column: 'timestamp',
+        operator: '>',
+        value: from.getTime(),
+      });
+    }
+    if (to) {
+      args.push({
+        column: 'timestamp',
+        operator: '<',
+        value: to.getTime(),
+      });
+    }
+    return database.list(WalletTable, (r) => Wallet.fromRow(r), args);
   }
 
   static last(database: Database, exchange: string): Promise<Wallet> {

@@ -12,7 +12,7 @@ export default class TradeEngine extends InternalTradeEngine {
     private fullfillOrder;
     private manageBuyingOrder;
     private manageSellingOrder;
-    wallets(): Promise<Wallet[]>;
+    wallets(from?: Date, to?: Date): Promise<Wallet[]>;
     private manageWallets;
     private afterTickStarted;
 }

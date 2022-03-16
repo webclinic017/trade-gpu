@@ -49,7 +49,9 @@ class Database {
     }
     list(table, create, where) {
         if (where) {
-            return this.executeWhere(table, table.list(where.columns), where.values, create);
+            return this.executeWhere(table, table.list(where
+                ? where.map(({ column, operator }) => ({ column, operator }))
+                : undefined), where === null || where === void 0 ? void 0 : where.map(({ value }) => value), create);
         }
         return new Promise((resolve, reject) => {
             const list = [];

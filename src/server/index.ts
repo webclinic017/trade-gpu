@@ -42,9 +42,14 @@ export class Server {
       }
     });
 
-    this.app.get('/wallets', async (req, res) => {
+    this.app.get('/wallets/:from/:to', async (req, res) => {
       try {
-        const wallets = await runner.wallets();
+        let from = Number.parseInt(req?.params?.from);
+        let to = Number.parseInt(req?.params?.to);
+        if (!from || Number.isNaN(from)) from = 0;
+        if (!to || Number.isNaN(to)) to = 0;
+
+        const wallets = await runner.wallets(new Date(from), new Date(to));
         res.json(wallets.map((w) => w.json()));
       } catch (err) {
         res.status(500).json({ err: `${err}` });

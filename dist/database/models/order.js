@@ -42,10 +42,13 @@ class Order extends model_1.default {
         this.id = id;
     }
     static list(database, exchange) {
-        return database.list(exports.OrderTable, (r) => Order.fromRow(r), {
-            columns: ['exchange'],
-            values: [exchange],
-        });
+        return database.list(exports.OrderTable, (r) => Order.fromRow(r), [
+            {
+                column: 'exchange',
+                operator: '=',
+                value: exchange,
+            },
+        ]);
     }
     static last(database, exchange) {
         return database.lastWhere(exports.OrderTable, ['exchange'], [exchange], (r) => Order.fromRow(r));

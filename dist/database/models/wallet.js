@@ -29,17 +29,29 @@ class Wallet extends model_1.default {
         this.currentAmount = currentAmount;
         this.id = id;
     }
-    static where(database, exchange, from, to) {
-        return database.list(exports.WalletTable, (r) => Wallet.fromRow(r), {
-            columns: ['exchange'],
-            values: [exchange],
-        });
-    }
-    static list(database, exchange) {
-        return database.list(exports.WalletTable, (r) => Wallet.fromRow(r), {
-            columns: ['exchange'],
-            values: [exchange],
-        });
+    static list(database, exchange, from, to) {
+        const args = [
+            {
+                column: 'exchange',
+                operator: '=',
+                value: exchange,
+            },
+        ];
+        if (from) {
+            args.push({
+                column: 'timestamp',
+                operator: '>',
+                value: from.getTime(),
+            });
+        }
+        if (to) {
+            args.push({
+                column: 'timestamp',
+                operator: '<',
+                value: to.getTime(),
+            });
+        }
+        return database.list(exports.WalletTable, (r) => Wallet.fromRow(r), args);
     }
     static last(database, exchange) {
         return database.lastWhere(exports.WalletTable, ['exchange'], [exchange], (r) => Wallet.fromRow(r));

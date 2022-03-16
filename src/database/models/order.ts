@@ -26,10 +26,13 @@ export const OrderTable = table;
 const b = (value: any) => new BigNumber(value);
 export default class Order extends Model {
   static list(database: Database, exchange: string): Promise<Order[]> {
-    return database.list(OrderTable, (r) => Order.fromRow(r), {
-      columns: ['exchange'],
-      values: [exchange],
-    });
+    return database.list(OrderTable, (r) => Order.fromRow(r), [
+      {
+        column: 'exchange',
+        operator: '=',
+        value: exchange,
+      },
+    ]);
   }
 
   static last(database: Database, exchange: string): Promise<Order | null> {

@@ -29,10 +29,13 @@ export const TickTable = table;
 const b = (value: any) => new BigNumber(value);
 export default class Tick extends Model {
   static list(database: Database, exchange: string): Promise<Tick[]> {
-    return database.list(TickTable, (r) => Tick.fromRow(r), {
-      columns: ['exchange'],
-      values: [exchange],
-    });
+    return database.list(TickTable, (r) => Tick.fromRow(r), [
+      {
+        column: 'exchange',
+        operator: '=',
+        value: exchange,
+      },
+    ]);
   }
 
   static last(

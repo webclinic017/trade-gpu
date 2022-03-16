@@ -45,10 +45,13 @@ class Tick extends model_1.default {
         this.priceChangePercentage = priceChangePercentage;
     }
     static list(database, exchange) {
-        return database.list(exports.TickTable, (r) => Tick.fromRow(r), {
-            columns: ['exchange'],
-            values: [exchange],
-        });
+        return database.list(exports.TickTable, (r) => Tick.fromRow(r), [
+            {
+                column: 'exchange',
+                operator: '=',
+                value: exchange,
+            },
+        ]);
     }
     static last(database, exchange, left, right) {
         return database.lastWhere(exports.TickTable, ['left', 'right', 'exchange'], [left, right, exchange], (r) => Tick.fromRow(r));

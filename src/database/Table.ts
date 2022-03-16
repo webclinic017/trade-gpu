@@ -1,5 +1,10 @@
 import { Column } from './Column';
 
+export interface ColumnOperator {
+  column: string;
+  operator: '=' | '<' | '>';
+}
+
 export class Table {
   name: string;
 
@@ -23,10 +28,12 @@ export class Table {
     return `SELECT ${columns} FROM ${this.name} ORDER BY id DESC LIMIT 1`;
   }
 
-  public list(options?: string[]) {
+  public list(options?: ColumnOperator[]) {
     const columns = this.columns.map((c) => c.name).join(',');
     if (options && options.length > 0) {
-      const whereColumns = options.map((c) => `${c}=?`).join(' AND ');
+      const whereColumns = options
+        .map((c) => `${c.column}${c.operator}?`)
+        .join(' AND ');
       return `SELECT ${columns} FROM ${this.name} WHERE ${whereColumns} ORDER BY id`;
     }
 
