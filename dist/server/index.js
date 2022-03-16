@@ -28,7 +28,16 @@ class Server {
         this.app.get('/orders', (req, res) => __awaiter(this, void 0, void 0, function* () {
             try {
                 const orders = yield runner.orders();
-                res.json(orders);
+                res.json(orders.map(({ from, to, orders }) => ({ from, to, orders: orders.map(o => o.json()) })));
+            }
+            catch (err) {
+                res.status(500).json({ err: `${err}` });
+            }
+        }));
+        this.app.get('/wallets', (req, res) => __awaiter(this, void 0, void 0, function* () {
+            try {
+                const wallets = yield runner.wallets();
+                res.json(wallets.map(w => w.json()));
             }
             catch (err) {
                 res.status(500).json({ err: `${err}` });
@@ -62,7 +71,7 @@ class Server {
         });
     }
     start() {
-        this.server.listen(4443, () => console.log('listening on port 4443'));
+        this.server.listen(server_1.default.port, () => console.log(`listening on port ${server_1.default.port}`));
         this.datagram_server.bind(1732);
     }
 }

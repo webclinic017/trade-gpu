@@ -265,6 +265,11 @@ class TradeEngine extends InternalTradeEngine_1.default {
             throw 'out of the loop without either error or request sent... ?';
         });
     }
+    wallets() {
+        return __awaiter(this, void 0, void 0, function* () {
+            return wallet_1.default.list(this.database(), this.exchange.name());
+        });
+    }
     manageWallets(array) {
         return __awaiter(this, void 0, void 0, function* () {
             const wallets = [];

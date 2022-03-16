@@ -53,6 +53,10 @@ export class Runner {
     }
   }
 
+  public async wallets() {
+    return this.tradeEngine.wallets();
+  }
+
   public async start() {
     try {
       await this.tickHolder.start();

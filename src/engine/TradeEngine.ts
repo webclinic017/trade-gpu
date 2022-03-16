@@ -364,6 +364,10 @@ export default class TradeEngine extends InternalTradeEngine {
     throw 'out of the loop without either error or request sent... ?';
   }
 
+  public async wallets() {
+    return Wallet.list(this.database(), this.exchange.name());
+  }
+
   private async manageWallets(array: DeviseValue) {
     const wallets: Wallet[] = [];
     Object.keys(array).forEach((k) => {

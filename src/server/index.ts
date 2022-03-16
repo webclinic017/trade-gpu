@@ -30,7 +30,22 @@ export class Server {
     this.app.get('/orders', async (req, res) => {
       try {
         const orders = await runner.orders();
-        res.json(orders);
+        res.json(
+          orders.map(({ from, to, orders }) => ({
+            from,
+            to,
+            orders: orders.map((o) => o.json()),
+          })),
+        );
+      } catch (err) {
+        res.status(500).json({ err: `${err}` });
+      }
+    });
+
+    this.app.get('/wallets', async (req, res) => {
+      try {
+        const wallets = await runner.wallets();
+        res.json(wallets.map((w) => w.json()));
       } catch (err) {
         res.status(500).json({ err: `${err}` });
       }
@@ -71,7 +86,7 @@ export class Server {
   }
 
   public start() {
-    this.server.listen(4443, () => console.log('listening on port 4443'));
+    this.server.listen(config.port, () => console.log(`listening on port ${config.port}`));
     this.datagram_server.bind(1732);
   }
 }

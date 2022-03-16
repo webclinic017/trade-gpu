@@ -13,5 +13,6 @@ export declare class Runner {
         to: Devise;
         orders: Order[];
     }[]>;
+    wallets(): Promise<import("../database/models/wallet").default[]>;
     start(): Promise<void>;
 }

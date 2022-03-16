@@ -46,6 +46,11 @@ class Runner {
             }
         });
     }
+    wallets() {
+        return __awaiter(this, void 0, void 0, function* () {
+            return this.tradeEngine.wallets();
+        });
+    }
     start() {
         return __awaiter(this, void 0, void 0, function* () {
             try {
