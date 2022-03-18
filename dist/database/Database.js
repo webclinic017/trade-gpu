@@ -69,32 +69,56 @@ class Database {
             return result;
         });
     }
+    firstWhere(table, columns, values, create) {
+        return this.executeWhere(table, table.first(columns), values, create).then((results) => {
+            const result = results.find((item) => !!item);
+            if (!result)
+                throw 'no last item';
+            return result;
+        });
+    }
     executeWhere(table, query, values, create) {
         return new Promise((resolve, reject) => {
             const result = [];
-            this.database.run(table.str());
-            const statement = this.database.prepare(query);
-            statement.each(values, (err, row) => {
-                result.push(create(row));
-            }, () => resolve(result));
-            statement.finalize();
+            this.database.run(table.str(), () => {
+                const statement = this.database.prepare(query);
+                statement.each(values, (err, row) => {
+                    result.push(create(row));
+                }, () => resolve(result));
+                statement.finalize();
+            });
         });
     }
-    last(table, create) {
+    last(table, create, column, columns, values) {
+        if (columns && values && columns.length === values.length) {
+            const query = table.last(columns, column);
+            return new Promise((resolve, reject) => {
+                this.executeWhere(table, query, values, create)
+                    .then((objects) => {
+                    if (!objects)
+                        throw 'no objects';
+                    const valid = objects.find((o) => !!o);
+                    resolve(valid || null);
+                })
+                    .catch((err) => reject(err));
+            });
+        }
         return new Promise((resolve, reject) => {
             let result = null;
-            this.database.run(table.str());
-            this.database.each(table.last(), (err, row) => {
-                result = create(row);
-            }, () => resolve(result));
+            this.database.run(table.str(), () => {
+                this.database.each(table.last(undefined, column), (err, row) => {
+                    result = create(row);
+                }, () => resolve(result));
+            });
         });
     }
     add(table) {
         return new Promise((resolve, reject) => {
             this.database.serialize(() => {
-                this.database.run(table.str());
-                table.indexes().forEach((row) => {
-                    this.database.run(row);
+                this.database.run(table.str(), () => {
+                    table.indexes().forEach((row) => {
+                        this.database.run(row);
+                    });
                 });
             });
             resolve();

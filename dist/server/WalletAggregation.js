@@ -13,28 +13,10 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const moment_1 = __importDefault(require("moment"));
-function create() {
-    return {
-        expectedMax: 0,
-        currentMax: 0,
-        expectedMin: Number.MAX_VALUE,
-        currentMin: Number.MAX_VALUE,
-        expectedAvg: 0,
-        currentAvg: 0,
-        cardinal: 0,
-    };
-}
-function getOrCreate(devise, dayInfos, day, days) {
-    if (dayInfos[devise] && dayInfos[devise][day])
-        return dayInfos[devise][day];
-    const array = [];
-    dayInfos[devise] = array;
-    for (let i = 0; i < days; i++)
-        array.push(create());
-    const result = array[day];
-    if (!result)
-        throw `${day} is out of range from ${days}`;
-    return result;
+function pushInto(dayInfos, walletAggregated) {
+    if (!dayInfos[walletAggregated.devise])
+        dayInfos[walletAggregated.devise] = [];
+    dayInfos[walletAggregated.devise].push(walletAggregated);
 }
 class WalletAggregation {
     constructor(exchange, month, year) {
@@ -46,57 +28,55 @@ class WalletAggregation {
     load(runner) {
         return __awaiter(this, void 0, void 0, function* () {
             // artifically create the expected number of info to fetch
+            const now = moment_1.default();
             const date = moment_1.default()
                 .set('year', this.year)
                 .set('day', 1)
                 .set('month', this.month);
-            const startOf = date.startOf('month');
-            const endOf = date.clone().endOf('month');
-            const days = startOf.daysInMonth();
-            const wallets = yield runner.walletsRaw(startOf.toDate(), endOf.toDate());
-            wallets.forEach(({ 
-            // eslint-disable-next-line camelcase
-            expected_amount, 
-            // eslint-disable-next-line camelcase
-            current_amount, timestamp, devise, }) => {
-                const date = moment_1.default(Number.parseInt(timestamp.toFixed()));
-                if (date.get('month') !== this.month || date.get('year') !== this.year)
-                    return;
-                const day = date.date() - 1;
-                const holder = getOrCreate(devise, this.dayInfos, day, days);
-                const expectedTransformed = Number.parseInt(expected_amount);
-                const currentTransformed = Number.parseInt(current_amount);
-                if (expectedTransformed < holder.expectedMin)
-                    holder.expectedMin = expectedTransformed;
-                if (currentTransformed < holder.currentMin)
-                    holder.currentMin = currentTransformed;
-                if (expectedTransformed > holder.expectedMax)
-                    holder.expectedMax = expectedTransformed;
-                if (currentTransformed > holder.currentMax)
-                    holder.currentMax = currentTransformed;
-                holder.expectedAvg += expectedTransformed;
-                holder.currentAvg += currentTransformed;
-                holder.cardinal++;
-                holder.expectedAvg /= holder.cardinal;
-                holder.currentAvg /= holder.cardinal;
-            });
-            Object.keys(this.dayInfos).forEach(key => {
-                const holder = this.dayInfos[key];
-                holder.forEach(info => {
-                    if (info.expectedMin === Number.MAX_VALUE)
-                        info.expectedMin = 0;
-                    if (info.currentMin === Number.MAX_VALUE)
-                        info.currentMin = 0;
-                });
-            });
+            const startOfMonth = date.clone().startOf('month');
+            const endOfMonth = startOfMonth.clone().endOf('month');
+            console.log(`start of month ${startOfMonth} ${startOfMonth.unix() * 1000}`);
+            const aggregated = yield runner.walletAggregated(startOfMonth.toDate(), endOfMonth.toDate());
+            aggregated.forEach((a) => pushInto(this.dayInfos, a));
+            console.log(`took ${moment_1.default().diff(now, 'seconds')}`);
         });
+    }
+    infoJson() {
+        const holder = {};
+        Object.keys(this.dayInfos).forEach((key) => {
+            if (!holder[key])
+                holder[key] = [];
+            const walletAggregateds = this.dayInfos[key];
+            const walletsByDay = [];
+            walletAggregateds.forEach((walletAggregated) => {
+                const date = moment_1.default(walletAggregated.start.toNumber());
+                const days = date.daysInMonth();
+                while (walletsByDay.length < days)
+                    walletsByDay.push([]);
+                walletsByDay[date.date() - 1].push(walletAggregated);
+            });
+            holder[key] = walletsByDay.map((wallets) => ({
+                expectedMax: Math.max(...wallets.map((w) => w.expectedAmountMax.toNumber())),
+                expectedMin: Math.max(...wallets.map((w) => w.expectedAmountMin.toNumber())),
+                expectedAvg: wallets
+                    .map((w) => w.expectedAmountAvg.toNumber())
+                    .reduce((l, r) => l + r, 0) / wallets.length,
+                currentMax: Math.max(...wallets.map((w) => w.expectedAmountMax.toNumber())),
+                currentMin: Math.max(...wallets.map((w) => w.expectedAmountMin.toNumber())),
+                currentAvg: wallets
+                    .map((w) => w.expectedAmountAvg.toNumber())
+                    .reduce((l, r) => l + r, 0) / wallets.length,
+                cardinal: wallets.length,
+            }));
+        });
+        return holder;
     }
     json() {
         return {
             exchange: this.exchange,
             month: this.month,
             year: this.year,
-            info: this.dayInfos,
+            info: this.infoJson(),
         };
     }
 }

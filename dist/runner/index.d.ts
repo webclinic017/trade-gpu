@@ -15,6 +15,8 @@ export declare class Runner {
     }[]>;
     wallets(from?: Date, to?: Date): Promise<import("../database/models/wallet").default[]>;
     walletsRaw(from?: Date, to?: Date): Promise<import("../database/models/wallet").WalletRaw[]>;
+    walletAggregated(from?: Date, to?: Date): Promise<import("../database/models/wallet_aggregation").default[]>;
+    database(): import("../database").Database;
     start(): Promise<void>;
     exchange(): string;
 }

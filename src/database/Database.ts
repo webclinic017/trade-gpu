@@ -4,7 +4,7 @@ import Model from './models/model';
 
 export interface WhereTuple {
   column: string;
-  operator: '=' | '<' | '>';
+  operator: '=' | '<' | '>' | '<=' | '>=';
   value: any;
 }
 
@@ -127,6 +127,21 @@ export class Database {
     );
   }
 
+  public firstWhere<TYPE extends Model>(
+    table: Table,
+    columns: string[],
+    values: any[],
+    create: (r: any) => TYPE,
+  ): Promise<TYPE> {
+    return this.executeWhere(table, table.first(columns), values, create).then(
+      (results) => {
+        const result = results.find((item) => !!item);
+        if (!result) throw 'no last item';
+        return result;
+      },
+    );
+  }
+
   private executeWhere<TYPE>(
     table: Table,
     query: string,
@@ -135,47 +150,63 @@ export class Database {
   ): Promise<TYPE[]> {
     return new Promise((resolve, reject) => {
       const result: TYPE[] = [];
-      this.database.run(table.str());
+      this.database.run(table.str(), () => {
+        const statement = this.database.prepare(query);
 
-      const statement = this.database.prepare(query);
+        statement.each(
+          values,
+          (err: Error, row: any) => {
+            result.push(create(row));
+          },
+          () => resolve(result),
+        );
 
-      statement.each(
-        values,
-        (err: Error, row: any) => {
-          result.push(create(row));
-        },
-        () => resolve(result),
-      );
-
-      statement.finalize();
+        statement.finalize();
+      });
     });
   }
 
   public last<TYPE extends Model>(
     table: Table,
     create: (r: any) => TYPE,
+    column?: string,
+    columns?: string[],
+    values?: string[],
   ): Promise<TYPE | null> {
+    if (columns && values && columns.length === values.length) {
+      const query = table.last(columns, column);
+      return new Promise((resolve, reject) => {
+        this.executeWhere(table, query, values, create)
+          .then((objects) => {
+            if (!objects) throw 'no objects';
+            const valid = objects.find((o) => !!o);
+            resolve(valid || null);
+          })
+          .catch((err) => reject(err));
+      });
+    }
+
     return new Promise((resolve, reject) => {
       let result: TYPE | null = null;
-      this.database.run(table.str());
-
-      this.database.each(
-        table.last(),
-        (err, row) => {
-          result = create(row);
-        },
-        () => resolve(result),
-      );
+      this.database.run(table.str(), () => {
+        this.database.each(
+          table.last(undefined, column),
+          (err, row) => {
+            result = create(row);
+          },
+          () => resolve(result),
+        );
+      });
     });
   }
 
   public add(table: Table): Promise<void> {
     return new Promise((resolve, reject) => {
       this.database.serialize(() => {
-        this.database.run(table.str());
-
-        table.indexes().forEach((row) => {
-          this.database.run(row);
+        this.database.run(table.str(), () => {
+          table.indexes().forEach((row) => {
+            this.database.run(row);
+          });
         });
       });
 

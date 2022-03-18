@@ -9,13 +9,25 @@ class Table {
     add(column) {
         this.columns.push(column);
     }
-    last(options) {
+    last(options, column) {
+        if (!column)
+            column = 'id';
         const columns = this.columns.map((c) => c.name).join(',');
         if (options && options.length > 0) {
             const whereColumns = options.map((c) => `${c}=?`).join(' AND ');
-            return `SELECT ${columns} FROM ${this.name} WHERE ${whereColumns} ORDER BY id DESC LIMIT 1`;
+            return `SELECT ${columns} FROM ${this.name} WHERE ${whereColumns} ORDER BY ${column} DESC LIMIT 1`;
         }
-        return `SELECT ${columns} FROM ${this.name} ORDER BY id DESC LIMIT 1`;
+        return `SELECT ${columns} FROM ${this.name} ORDER BY ${column} DESC LIMIT 1`;
+    }
+    first(options, column) {
+        if (!column)
+            column = 'id';
+        const columns = this.columns.map((c) => c.name).join(',');
+        if (options && options.length > 0) {
+            const whereColumns = options.map((c) => `${c}=?`).join(' AND ');
+            return `SELECT ${columns} FROM ${this.name} WHERE ${whereColumns} ORDER BY ${column} ASC LIMIT 1`;
+        }
+        return `SELECT ${columns} FROM ${this.name} ORDER BY ${column} ASC LIMIT 1`;
     }
     list(options) {
         const columns = this.columns.map((c) => c.name).join(',');

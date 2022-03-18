@@ -8,7 +8,7 @@ interface DayInfo {
     currentAvg: number;
     cardinal: number;
 }
-interface DayInfoDevise {
+interface DayInfoDeviseRaw {
     [devise: string]: DayInfo[];
 }
 export default class WalletAggregation {
@@ -18,11 +18,12 @@ export default class WalletAggregation {
     private dayInfos;
     constructor(exchange: string, month: number, year: number);
     load(runner: Runner): Promise<void>;
+    private infoJson;
     json(): {
         exchange: string;
         month: number;
         year: number;
-        info: DayInfoDevise;
+        info: DayInfoDeviseRaw;
     };
 }
 export {};

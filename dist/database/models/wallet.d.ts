@@ -20,7 +20,8 @@ export default class Wallet extends Model {
     static list(database: Database, exchange: string, from?: Date, to?: Date): Promise<Wallet[]>;
     static listRaw(database: Database, exchange: string, from?: Date, to?: Date): Promise<WalletRaw[]>;
     private static listCallback;
-    static last(database: Database, exchange: string): Promise<Wallet>;
+    static last(database: Database, exchange: string): Promise<Wallet | null>;
+    static first(database: Database, exchange: string): Promise<Wallet | null>;
     static fromRow(h: any): Wallet;
     constructor(exchange: string, timestamp: BigNumber, devise: string, expectedAmount: BigNumber, currentAmount: BigNumber, id?: number | undefined);
     isIn(orders: Wallet[]): boolean;

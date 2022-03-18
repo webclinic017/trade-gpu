@@ -17,6 +17,8 @@ const ticks_1 = __importDefault(require("../database/models/ticks"));
 const order_1 = __importDefault(require("../database/models/order"));
 const wallet_1 = __importDefault(require("../database/models/wallet"));
 const InternalTradeEngine_1 = __importDefault(require("./InternalTradeEngine"));
+const wallet_aggregation_1 = __importDefault(require("../database/models/wallet_aggregation"));
+const WalletAggregator_1 = __importDefault(require("./WalletAggregator"));
 bignumber_js_1.BigNumber.set({ DECIMAL_PLACES: 10, ROUNDING_MODE: bignumber_js_1.BigNumber.ROUND_FLOOR });
 class TradeEngine extends InternalTradeEngine_1.default {
     constructor(devises, configs, exchange, tickHolder, ordersHolders) {
@@ -122,10 +124,12 @@ class TradeEngine extends InternalTradeEngine_1.default {
             setTimeout(() => this.afterTickStarted(), 60000);
         });
         this.started = false;
+        this.aggregator = new WalletAggregator_1.default(tickHolder.database(), exchange.name());
     }
     start() {
         if (!this.started) {
             this.started = true;
+            this.aggregator.start();
             this.afterTickStarted();
         }
     }
@@ -273,6 +277,11 @@ class TradeEngine extends InternalTradeEngine_1.default {
     walletsRaw(from, to) {
         return __awaiter(this, void 0, void 0, function* () {
             return wallet_1.default.listRaw(this.database(), this.exchange.name(), from, to);
+        });
+    }
+    walletAggregated(from, to) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return wallet_aggregation_1.default.list(this.database(), this.exchange.name(), from, to);
         });
     }
     manageWallets(array) {

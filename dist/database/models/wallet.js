@@ -46,14 +46,14 @@ class Wallet extends model_1.default {
         if (from) {
             args.push({
                 column: 'timestamp',
-                operator: '>',
+                operator: '>=',
                 value: from.getTime(),
             });
         }
         if (to) {
             args.push({
                 column: 'timestamp',
-                operator: '<',
+                operator: '<=',
                 value: to.getTime(),
             });
         }
@@ -61,6 +61,9 @@ class Wallet extends model_1.default {
     }
     static last(database, exchange) {
         return database.lastWhere(exports.WalletTable, ['exchange'], [exchange], (r) => Wallet.fromRow(r));
+    }
+    static first(database, exchange) {
+        return database.firstWhere(exports.WalletTable, ['exchange'], [exchange], (r) => Wallet.fromRow(r));
     }
     static fromRow(h) {
         return new Wallet(h.exchange, b(h.timestamp), h.devise, b(h.expected_amount), b(h.current_amount), h.id);

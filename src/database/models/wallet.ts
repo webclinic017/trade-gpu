@@ -71,22 +71,26 @@ export default class Wallet extends Model {
     if (from) {
       args.push({
         column: 'timestamp',
-        operator: '>',
+        operator: '>=',
         value: from.getTime(),
       });
     }
     if (to) {
       args.push({
         column: 'timestamp',
-        operator: '<',
+        operator: '<=',
         value: to.getTime(),
       });
     }
     return database.list(WalletTable, transform, args);
   }
 
-  static last(database: Database, exchange: string): Promise<Wallet> {
+  static last(database: Database, exchange: string): Promise<Wallet | null> {
     return database.lastWhere(WalletTable, ['exchange'], [exchange], (r) => Wallet.fromRow(r));
+  }
+
+  static first(database: Database, exchange: string): Promise<Wallet | null> {
+    return database.firstWhere(WalletTable, ['exchange'], [exchange], (r) => Wallet.fromRow(r));
   }
 
   static fromRow(h: any): Wallet {

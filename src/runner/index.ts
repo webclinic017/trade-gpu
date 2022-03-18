@@ -61,6 +61,14 @@ export class Runner {
     return this.tradeEngine.walletsRaw(from, to);
   }
 
+  public async walletAggregated(from?: Date, to?: Date) {
+    return this.tradeEngine.walletAggregated(from, to);
+  }
+
+  public database() {
+    return this.tickHolder.database();
+  }
+
   public async start() {
     try {
       await this.tickHolder.start();

@@ -11,6 +11,8 @@ import InternalTradeEngine, {
   DeviseConfig,
   TradeConfig,
 } from './InternalTradeEngine';
+import WalletAggregated from '../database/models/wallet_aggregation';
+import WalletAggregator from './WalletAggregator';
 
 export { DeviseConfig, TradeConfig } from './InternalTradeEngine';
 
@@ -23,6 +25,8 @@ interface DeviseValue {
 export default class TradeEngine extends InternalTradeEngine {
   private started: boolean;
 
+  private aggregator: WalletAggregator;
+
   constructor(
     devises: Map<Devise, DeviseConfig>,
     configs: TradeConfig[],
@@ -32,11 +36,16 @@ export default class TradeEngine extends InternalTradeEngine {
   ) {
     super(devises, configs, exchange, tickHolder, ordersHolders);
     this.started = false;
+    this.aggregator = new WalletAggregator(
+      tickHolder.database(),
+      exchange.name(),
+    );
   }
 
   public start() {
     if (!this.started) {
       this.started = true;
+      this.aggregator.start();
       this.afterTickStarted();
     }
   }
@@ -370,6 +379,15 @@ export default class TradeEngine extends InternalTradeEngine {
 
   public async walletsRaw(from?: Date, to?: Date) {
     return Wallet.listRaw(this.database(), this.exchange.name(), from, to);
+  }
+
+  public async walletAggregated(from?: Date, to?: Date) {
+    return WalletAggregated.list(
+      this.database(),
+      this.exchange.name(),
+      from,
+      to,
+    );
   }
 
   private async manageWallets(array: DeviseValue) {

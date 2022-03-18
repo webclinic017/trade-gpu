@@ -56,6 +56,14 @@ class Runner {
             return this.tradeEngine.walletsRaw(from, to);
         });
     }
+    walletAggregated(from, to) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return this.tradeEngine.walletAggregated(from, to);
+        });
+    }
+    database() {
+        return this.tickHolder.database();
+    }
     start() {
         return __awaiter(this, void 0, void 0, function* () {
             try {
