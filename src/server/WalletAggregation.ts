@@ -72,26 +72,34 @@ export default class WalletAggregation {
       });
 
       holder[key] = walletsByDay.map((wallets) => ({
-        expectedMax: Math.max(
-          ...wallets.map((w) => w.expectedAmountMax.toNumber()),
-        ),
-        expectedMin: Math.max(
-          ...wallets.map((w) => w.expectedAmountMin.toNumber()),
-        ),
+        expectedMax:
+          wallets.length === 0
+            ? 0
+            : Math.max(...wallets.map((w) => w.expectedAmountMax.toNumber())),
+        expectedMin:
+          wallets.length === 0
+            ? 0
+            : Math.max(...wallets.map((w) => w.expectedAmountMin.toNumber())),
         expectedAvg:
-          wallets
-            .map((w) => w.expectedAmountAvg.toNumber())
-            .reduce((l, r) => l + r, 0) / wallets.length,
-        currentMax: Math.max(
-          ...wallets.map((w) => w.expectedAmountMax.toNumber()),
-        ),
-        currentMin: Math.max(
-          ...wallets.map((w) => w.expectedAmountMin.toNumber()),
-        ),
+          wallets.length === 0
+            ? 0
+            : wallets
+              .map((w) => w.expectedAmountAvg.toNumber())
+              .reduce((l, r) => l + r, 0) / wallets.length,
+        currentMax:
+          wallets.length === 0
+            ? 0
+            : Math.max(...wallets.map((w) => w.currentAmountMax.toNumber())),
+        currentMin:
+          wallets.length === 0
+            ? 0
+            : Math.max(...wallets.map((w) => w.currentAmountMin.toNumber())),
         currentAvg:
-          wallets
-            .map((w) => w.expectedAmountAvg.toNumber())
-            .reduce((l, r) => l + r, 0) / wallets.length,
+          wallets.length === 0
+            ? 0
+            : wallets
+              .map((w) => w.currentAmountAvg.toNumber())
+              .reduce((l, r) => l + r, 0) / wallets.length,
         cardinal: wallets.length,
       }));
     });
