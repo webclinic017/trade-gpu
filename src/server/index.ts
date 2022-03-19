@@ -1,3 +1,4 @@
+import http from 'http';
 import https from 'https';
 import express, { Express } from 'express';
 import fs from 'fs';
@@ -7,7 +8,7 @@ import config from '../config/server';
 import WalletAggregation from './WalletAggregation';
 
 export class Server {
-  private server: https.Server;
+  private server: https.Server | http.Server;
 
   private datagram_server: dgram.Socket;
 
@@ -23,10 +24,14 @@ export class Server {
     this.key = config.key ? fs.readFileSync(config.key) : undefined;
     this.cert = config.cert ? fs.readFileSync(config.cert) : undefined;
 
-    this.server = https.createServer(
-      { key: this.key, cert: this.cert },
-      this.app,
-    );
+    if (!config.https) {
+      this.server = https.createServer(
+        { key: this.key, cert: this.cert },
+        this.app,
+      );
+    } else {
+      this.server = http.createServer(this.app);
+    }
 
     this.app.get('/orders', async (req, res) => {
       try {

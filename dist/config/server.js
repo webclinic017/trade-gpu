@@ -11,6 +11,7 @@ if (process.env.CONFIG_PATH) {
 const json = {
     key: process.env.SERVER_KEY,
     cert: process.env.SERVER_CERT,
+    https: "false" !== process.env.HTTPS,
     port: parseInt(process.env.SERVER_PORT || '443'),
 };
 if (Number.isNaN(json.port))

@@ -13,6 +13,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.Server = void 0;
+const http_1 = __importDefault(require("http"));
 const https_1 = __importDefault(require("https"));
 const express_1 = __importDefault(require("express"));
 const fs_1 = __importDefault(require("fs"));
@@ -25,7 +26,12 @@ class Server {
         this.app = express_1.default();
         this.key = server_1.default.key ? fs_1.default.readFileSync(server_1.default.key) : undefined;
         this.cert = server_1.default.cert ? fs_1.default.readFileSync(server_1.default.cert) : undefined;
-        this.server = https_1.default.createServer({ key: this.key, cert: this.cert }, this.app);
+        if (!server_1.default.https) {
+            this.server = https_1.default.createServer({ key: this.key, cert: this.cert }, this.app);
+        }
+        else {
+            this.server = http_1.default.createServer(this.app);
+        }
         this.app.get('/orders', (req, res) => __awaiter(this, void 0, void 0, function* () {
             try {
                 const orders = yield runner.orders();

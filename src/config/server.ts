@@ -8,6 +8,7 @@ if (process.env.CONFIG_PATH) {
 const json = {
   key: process.env.SERVER_KEY,
   cert: process.env.SERVER_CERT,
+  https: process.env.HTTPS !== 'false',
   port: parseInt(process.env.SERVER_PORT || '443'),
 };
 
