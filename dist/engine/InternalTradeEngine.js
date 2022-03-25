@@ -81,7 +81,13 @@ class InternalTradeEngine {
                 const price = tick.last;
                 if (!price)
                     throw 'no last price';
-                const current = orders.filter((o) => !o.completed && o.type === 'sell');
+                const current = orders.filter((o) => {
+                    if (!o.completed && o.type === 'sell')
+                        return true;
+                    if (o.type !== 'buy')
+                        return false;
+                    return !o.timeout || !o.completed; // every buy which is valid
+                });
                 const expectedValue = current
                     .map((order) => order.price.multipliedBy(order.amount))
                     .reduce((p, c) => p.plus(c), new bignumber_js_1.BigNumber(0));
