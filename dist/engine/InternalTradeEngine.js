@@ -86,7 +86,7 @@ class InternalTradeEngine {
                         return true;
                     if (o.type !== 'buy')
                         return false;
-                    return !o.timeout || !o.completed; // every buy which is valid
+                    return !o.timeout && !o.completed; // every buy which is valid
                 });
                 const expectedValue = current
                     .map((order) => order.price.multipliedBy(order.amount))
