@@ -102,6 +102,11 @@ export default class TradeEngine extends InternalTradeEngine {
 
       // get the account balance
       const { balances } = await this.exchange.account_balance();
+
+      Object.keys(balances).map((key) => ({
+        available: balances[key].available.toNumber(),
+        orders: balances[key].orders.toNumber(),
+      }));
       const from = balances[config.from];
       const to = balances[config.to];
       // this.log("from", from);
@@ -138,7 +143,7 @@ export default class TradeEngine extends InternalTradeEngine {
         return managed;
       }
 
-      const managed = this.manageBuyingOrder(
+      const managed = await this.manageBuyingOrder(
         config,
         configuration,
         tick,

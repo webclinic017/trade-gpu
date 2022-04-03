@@ -63,6 +63,10 @@ class TradeEngine extends InternalTradeEngine_1.default {
                 }
                 // get the account balance
                 const { balances } = yield this.exchange.account_balance();
+                Object.keys(balances).map(key => ({
+                    available: balances[key].available.toNumber(),
+                    orders: balances[key].orders.toNumber(),
+                }));
                 const from = balances[config.from];
                 const to = balances[config.to];
                 // this.log("from", from);
@@ -84,7 +88,7 @@ class TradeEngine extends InternalTradeEngine_1.default {
                     this.log('managed?', managed);
                     return managed;
                 }
-                const managed = this.manageBuyingOrder(config, configuration, tick, price, fromBalance);
+                const managed = yield this.manageBuyingOrder(config, configuration, tick, price, fromBalance);
                 throw 'out of the loop without either error or request sent... ?';
             }
             catch (err) {
