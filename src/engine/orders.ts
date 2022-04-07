@@ -49,6 +49,20 @@ export default class Orders {
     const newOrders = obtainedOrders.filter((o) => !o.isIn(this.orders));
     const toSave: Order[] = [];
 
+    // check for orders to fix
+    const toFix: Order[] = [];
+    shortOrders.forEach((order) => {
+      const cache = this.orders.find((o) => o.txid.isEqualTo(order.id));
+      if (!!cache && cache.completed) {
+        console.log('order to fix its completion status !');
+        toFix.push(cache);
+        cache.completed = false;
+      }
+    });
+
+    // saving cached orders
+    await Promise.all(toFix.map((o) => o.save(this.database)));
+
     newOrders.forEach((o) => (o.completed = false));
     this.orders.forEach(
       (o) => !o.completed && !o.isIn(obtainedOrders) && toSave.push(o),

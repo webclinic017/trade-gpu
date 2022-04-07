@@ -63,7 +63,7 @@ class TradeEngine extends InternalTradeEngine_1.default {
                 }
                 // get the account balance
                 const { balances } = yield this.exchange.account_balance();
-                Object.keys(balances).map(key => ({
+                Object.keys(balances).map((key) => ({
                     available: balances[key].available.toNumber(),
                     orders: balances[key].orders.toNumber(),
                 }));
