@@ -9,6 +9,8 @@ export { DeviseConfig, TradeConfig } from './InternalTradeEngine';
 export default class TradeEngine extends InternalTradeEngine {
     private started;
     private aggregator;
+    private manageBuy;
+    private manageSell;
     constructor(devises: Map<Devise, DeviseConfig>, configs: TradeConfig[], exchange: AbstractExchange, tickHolder: TickHolder, ordersHolders: Orders);
     start(): void;
     private fullfillOrder;

@@ -63,16 +63,16 @@ class Orders {
             const toSave = [];
             // check for orders to fix
             const toFix = [];
-            shortOrders.forEach(order => {
-                const cache = this.orders.find(o => o.txid.isEqualTo(order.id));
+            shortOrders.forEach((order) => {
+                const cache = this.orders.find((o) => o.txid.isEqualTo(order.id));
                 if (!!cache && cache.completed) {
-                    console.log("order to fix its completion status !");
+                    console.log('order to fix its completion status !');
                     toFix.push(cache);
                     cache.completed = false;
                 }
             });
             // saving cached orders
-            yield Promise.all(toFix.map(o => o.save(this.database)));
+            yield Promise.all(toFix.map((o) => o.save(this.database)));
             newOrders.forEach((o) => (o.completed = false));
             this.orders.forEach((o) => !o.completed && !o.isIn(obtainedOrders) && toSave.push(o));
             toSave.forEach((o) => (o.completed = true));

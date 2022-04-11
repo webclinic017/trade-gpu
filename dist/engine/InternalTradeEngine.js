@@ -16,8 +16,7 @@ const bignumber_js_1 = require("bignumber.js");
 const ticks_1 = __importDefault(require("../database/models/ticks"));
 bignumber_js_1.BigNumber.set({ DECIMAL_PLACES: 10, ROUNDING_MODE: bignumber_js_1.BigNumber.ROUND_FLOOR });
 class InternalTradeEngine {
-    constructor(devises, configs, exchange, tickHolder, ordersHolders) {
-        this.devises = devises;
+    constructor(configs, exchange, tickHolder, ordersHolders) {
         this.configs = configs;
         this.exchange = exchange;
         this.tickHolder = tickHolder;
@@ -50,19 +49,6 @@ class InternalTradeEngine {
         if (!this.currencyLimits)
             throw 'invalid configuration';
         return (this.currencyLimits.find((cl) => cl.from === from && cl.to === to) || null);
-    }
-    decimals(devise) {
-        if (!devise)
-            return 2;
-        const object = this.devises.get(devise);
-        if (!object)
-            return 2;
-        let { decimals } = object;
-        if (decimals === null || undefined === decimals)
-            decimals = 0;
-        if (decimals < 0)
-            decimals = 0;
-        return decimals;
     }
     expectedValue(config) {
         return __awaiter(this, void 0, void 0, function* () {

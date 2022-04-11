@@ -20,19 +20,17 @@ export interface TradeConfig {
     maximum_balance_used: number;
 }
 export default class InternalTradeEngine {
-    protected devises: Map<Devise, DeviseConfig>;
     protected configs: TradeConfig[];
     protected exchange: AbstractExchange;
     protected tickHolder: TickHolder;
     protected ordersHolders: Orders;
     protected currencyLimits?: CurrencyLimit[];
-    constructor(devises: Map<Devise, DeviseConfig>, configs: TradeConfig[], exchange: AbstractExchange, tickHolder: TickHolder, ordersHolders: Orders);
+    constructor(configs: TradeConfig[], exchange: AbstractExchange, tickHolder: TickHolder, ordersHolders: Orders);
     protected log(text: string, arg?: any): void;
     protected error(text: string, arg?: any): void;
     load_configuration(): Promise<CurrencyLimit[]>;
     protected database(): Database;
     protected currency(from?: Devise, to?: Devise): CurrencyLimit | null;
-    protected decimals(devise?: Devise): number;
     protected expectedValue(config: TradeConfig): Promise<[BigNumber, BigNumber]>;
     protected last(orders: Order[], type: 'sell' | 'buy'): Order | null;
 }

@@ -4,7 +4,6 @@ import TickHolder from './TickHolder';
 import Tick from '../database/models/ticks';
 import Orders from './orders';
 import Order from '../database/models/order';
-import Wallet from '../database/models/wallet';
 import { CurrencyLimit, Devise } from '../exchanges/defs';
 import { AbstractExchange } from '../exchanges/AbstractExchange';
 
@@ -30,7 +29,6 @@ export default class InternalTradeEngine {
   protected currencyLimits?: CurrencyLimit[];
 
   constructor(
-    protected devises: Map<Devise, DeviseConfig>,
     protected configs: TradeConfig[],
     protected exchange: AbstractExchange,
     protected tickHolder: TickHolder,
@@ -63,16 +61,6 @@ export default class InternalTradeEngine {
     return (
       this.currencyLimits.find((cl) => cl.from === from && cl.to === to) || null
     );
-  }
-
-  protected decimals(devise?: Devise) {
-    if (!devise) return 2;
-    const object = this.devises.get(devise);
-    if (!object) return 2;
-    let { decimals } = object;
-    if (decimals === null || undefined === decimals) decimals = 0;
-    if (decimals < 0) decimals = 0;
-    return decimals;
   }
 
   protected async expectedValue(
