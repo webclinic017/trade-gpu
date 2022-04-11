@@ -1,8 +1,8 @@
-import { Database } from './../../database/Database';
+import { Database } from '../../database/Database';
 import { AbstractExchange } from '../../exchanges/AbstractExchange';
 import { Devise } from '../../exchanges/defs';
-import { CurrencyLimit } from './../../exchanges/defs/CurrencyLimit';
-import { TradeConfig } from './../InternalTradeEngine';
+import { CurrencyLimit } from '../../exchanges/defs/CurrencyLimit';
+import { TradeConfig } from '../InternalTradeEngine';
 import Orders from '../orders';
 import { DeviseConfig } from '../TradeEngine';
 export default abstract class ManageAbstract<PARAMETERS> {

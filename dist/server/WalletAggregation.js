@@ -24,9 +24,15 @@ class WalletAggregation {
         this.month = month;
         this.year = year;
         this.dayInfos = {};
+        this.cached = false;
     }
     load(runner) {
         return __awaiter(this, void 0, void 0, function* () {
+            if (!this.needLoad())
+                return;
+            // reset anyway
+            this.dayInfos = {};
+            this.cached = false;
             // artifically create the expected number of info to fetch
             const now = moment_1.default();
             const date = moment_1.default()
@@ -39,7 +45,22 @@ class WalletAggregation {
             const aggregated = yield runner.walletAggregated(startOfMonth.toDate(), endOfMonth.toDate());
             aggregated.forEach((a) => pushInto(this.dayInfos, a));
             console.log(`took ${moment_1.default().diff(now, 'seconds')}`);
+            this.cached = true;
         });
+    }
+    needLoad() {
+        // if not loaded previously
+        if (!this.cached)
+            return true;
+        // if the month and year are the same, we need to reload
+        const now = moment_1.default();
+        if (now.get("years") === this.year && now.get("month") === this.month)
+            return true;
+        // if the expected date is after the current date, we'll reload anyway
+        const expected = now.clone().set("years", this.year).set("month", this.month);
+        if (now.isBefore(expected))
+            return true;
+        return false;
     }
     infoJson() {
         const holder = {};

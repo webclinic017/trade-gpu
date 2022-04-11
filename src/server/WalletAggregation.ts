@@ -28,6 +28,8 @@ function pushInto(dayInfos: DayInfoDevise, walletAggregated: WalletAggregated) {
 export default class WalletAggregation {
   private dayInfos: DayInfoDevise = {};
 
+  private cached: boolean = false;
+
   public constructor(
     private exchange: string,
     private month: number,
@@ -35,6 +37,12 @@ export default class WalletAggregation {
   ) {}
 
   public async load(runner: Runner) {
+    if (!this.needLoad()) return;
+
+    // reset anyway
+    this.dayInfos = {};
+    this.cached = false;
+
     // artifically create the expected number of info to fetch
     const now = moment();
     const date = moment()
@@ -52,6 +60,24 @@ export default class WalletAggregation {
     aggregated.forEach((a) => pushInto(this.dayInfos, a));
 
     console.log(`took ${moment().diff(now, 'seconds')}`);
+    this.cached = true;
+  }
+
+  private needLoad() {
+    // if not loaded previously
+    if (!this.cached) return true;
+
+    // if the month and year are the same, we need to reload
+    const now = moment();
+    if (now.get('years') === this.year && now.get('month') === this.month) return true;
+
+    // if the expected date is after the current date, we'll reload anyway
+    const expected = now
+      .clone()
+      .set('years', this.year)
+      .set('month', this.month);
+    if (now.isBefore(expected)) return true;
+    return false;
   }
 
   private infoJson(): DayInfoDeviseRaw {

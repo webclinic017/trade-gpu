@@ -1,6 +1,6 @@
 import { BigNumber } from 'bignumber.js';
-import { TradeConfig } from './../InternalTradeEngine';
-import { CurrencyLimit } from './../../exchanges/defs/CurrencyLimit';
+import { TradeConfig } from '../InternalTradeEngine';
+import { CurrencyLimit } from '../../exchanges/defs/CurrencyLimit';
 import Order from '../../database/models/order';
 import ManageAbstract from './abstract';
 export interface ManageSellConfig {

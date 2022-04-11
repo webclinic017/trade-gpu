@@ -1,7 +1,7 @@
 import { BigNumber } from 'bignumber.js';
 import Tick from '../../database/models/ticks';
-import { CurrencyLimit } from './../../exchanges/defs/CurrencyLimit';
-import { TradeConfig } from './../InternalTradeEngine';
+import { CurrencyLimit } from '../../exchanges/defs/CurrencyLimit';
+import { TradeConfig } from '../InternalTradeEngine';
 import ManageAbstract from './abstract';
 interface ManageBuyConfig {
     tick: Tick;

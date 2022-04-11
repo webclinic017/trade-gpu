@@ -142,17 +142,22 @@ class TradeEngine extends InternalTradeEngine_1.default {
     }
     manageBuyingOrder(config, configuration, tick, price, fromBalance) {
         return __awaiter(this, void 0, void 0, function* () {
-            //return promise boolean
+            // return promise boolean
             return this.manageBuy.manage(config, configuration, {
-                tick, price, fromBalance
+                tick,
+                price,
+                fromBalance,
             });
         });
     }
     manageSellingOrder(config, configuration, toBalance, priceToSellCurrentTick, orders, lastBuyComplete) {
         return __awaiter(this, void 0, void 0, function* () {
-            //return promise boolean
+            // return promise boolean
             return this.manageSell.manage(config, configuration, {
-                toBalance, priceToSellCurrentTick, orders, lastBuyComplete
+                toBalance,
+                priceToSellCurrentTick,
+                orders,
+                lastBuyComplete,
             });
         });
     }

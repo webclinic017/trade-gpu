@@ -16,8 +16,10 @@ export default class WalletAggregation {
     private month;
     private year;
     private dayInfos;
+    private cached;
     constructor(exchange: string, month: number, year: number);
     load(runner: Runner): Promise<void>;
+    private needLoad;
     private infoJson;
     json(): {
         exchange: string;
