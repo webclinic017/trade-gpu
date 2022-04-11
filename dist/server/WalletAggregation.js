@@ -54,10 +54,13 @@ class WalletAggregation {
             return true;
         // if the month and year are the same, we need to reload
         const now = moment_1.default();
-        if (now.get("years") === this.year && now.get("month") === this.month)
+        if (now.get('years') === this.year && now.get('month') === this.month)
             return true;
         // if the expected date is after the current date, we'll reload anyway
-        const expected = now.clone().set("years", this.year).set("month", this.month);
+        const expected = now
+            .clone()
+            .set('years', this.year)
+            .set('month', this.month);
         if (now.isBefore(expected))
             return true;
         return false;

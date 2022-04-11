@@ -20,9 +20,21 @@ const fs_1 = __importDefault(require("fs"));
 const dgram_1 = __importDefault(require("dgram"));
 const server_1 = __importDefault(require("../config/server"));
 const WalletAggregation_1 = __importDefault(require("./WalletAggregation"));
+const moment_1 = __importDefault(require("moment"));
+function getOrSet(data, exchange, month, year) {
+    if (!data[exchange])
+        data[exchange] = {};
+    const holder = data[exchange];
+    if (!holder[year])
+        holder[year] = {};
+    if (!holder[year][month])
+        holder[year][month] = new WalletAggregation_1.default(exchange, month, year);
+    return holder[year][month];
+}
 class Server {
     constructor(runner) {
         this.runner = runner;
+        this.data = {};
         this.app = express_1.default();
         this.key = server_1.default.key ? fs_1.default.readFileSync(server_1.default.key) : undefined;
         this.cert = server_1.default.cert ? fs_1.default.readFileSync(server_1.default.cert) : undefined;
@@ -50,7 +62,12 @@ class Server {
             try {
                 const month = Number.parseInt((_a = req === null || req === void 0 ? void 0 : req.params) === null || _a === void 0 ? void 0 : _a.month) - 1;
                 const year = Number.parseInt((_b = req === null || req === void 0 ? void 0 : req.params) === null || _b === void 0 ? void 0 : _b.year);
-                const aggregat = new WalletAggregation_1.default(runner.exchange(), month, year);
+                const currentYear = moment_1.default().year();
+                if (month < 0 || month > 11)
+                    throw `invalid month : ${month}`;
+                if (Math.abs(year - currentYear) > 10)
+                    throw `invalid year : ${year}`;
+                const aggregat = getOrSet(this.data, runner.exchange(), month, year);
                 yield aggregat.load(runner);
                 res.json(aggregat.json());
             }
