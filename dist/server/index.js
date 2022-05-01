@@ -18,9 +18,9 @@ const https_1 = __importDefault(require("https"));
 const express_1 = __importDefault(require("express"));
 const fs_1 = __importDefault(require("fs"));
 const dgram_1 = __importDefault(require("dgram"));
+const moment_1 = __importDefault(require("moment"));
 const server_1 = __importDefault(require("../config/server"));
 const WalletAggregation_1 = __importDefault(require("./WalletAggregation"));
-const moment_1 = __importDefault(require("moment"));
 function getOrSet(data, exchange, month, year) {
     if (!data[exchange])
         data[exchange] = {};

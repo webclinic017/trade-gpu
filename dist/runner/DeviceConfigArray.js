@@ -66,6 +66,12 @@ const decimals = [
         decimals_price: 10,
         minimum: 1,
     },
+    {
+        name: 'XLM',
+        decimals: 0,
+        decimals_price: 10,
+        minimum: 1,
+    },
 ];
 function getDeviseConfigArray() {
     return decimals.map((d) => (Object.assign({}, d)));

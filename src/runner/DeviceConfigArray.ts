@@ -65,6 +65,12 @@ const decimals: DeviseConfig[] = [
     decimals_price: 10,
     minimum: 1,
   },
+  {
+    name: 'XLM',
+    decimals: 0,
+    decimals_price: 10,
+    minimum: 1,
+  },
 ];
 
 export function getDeviseConfigArray() {
