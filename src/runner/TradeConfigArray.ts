@@ -27,6 +27,14 @@ const configs: TradeConfig[] = [
   },
   {
     from: 'EUR',
+    to: 'BCH',
+    buy_coef: 0.995,
+    sell_coef: 1.028,
+    maximum_price_change_percent: 5,
+    maximum_balance_used: 60,
+  },
+  {
+    from: 'EUR',
     to: 'BTC',
     buy_coef: 0.995,
     sell_coef: 1.028,

@@ -16,6 +16,6 @@ exports.DeviseNames = [
     'MANA',
     'TRX',
     'OMG',
-    'XLM'
+    'XLM',
 ];
 //# sourceMappingURL=DeviseNames.js.map
