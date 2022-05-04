@@ -22,7 +22,7 @@ const configs: TradeConfig[] = [
     to: 'LTC',
     buy_coef: 0.995,
     sell_coef: 1.028,
-    maximum_price_change_percent: 5,
+    maximum_price_change_percent: 10,
     maximum_balance_used: 60,
   },
   {
