@@ -172,6 +172,8 @@ export default class TradeEngine extends InternalTradeEngine {
         fromBalance,
       );
 
+      if (managed) return true;
+
       throw 'out of the loop without either error or request sent... ?';
     } catch (err) {
       this.error(`having ${err}`, err);
