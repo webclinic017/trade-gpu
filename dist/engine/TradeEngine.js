@@ -89,7 +89,7 @@ class TradeEngine extends InternalTradeEngine_1.default {
                     return managed;
                 }
                 const managed = yield this.manageBuyingOrder(config, configuration, tick, price, fromBalance);
-                if (!!managed)
+                if (managed)
                     return true;
                 throw 'out of the loop without either error or request sent... ?';
             }

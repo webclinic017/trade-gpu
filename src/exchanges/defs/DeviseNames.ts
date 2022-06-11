@@ -14,4 +14,7 @@ export const DeviseNames = [
   'TRX',
   'OMG',
   'XLM',
+  'ONT',
+  'MHC',
+  'ONG',
 ] as const;
