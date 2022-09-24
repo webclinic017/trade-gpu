@@ -57,7 +57,15 @@ class Database {
             const list = [];
             this.database.run(table.str());
             this.database.each(table.list(), (err, row) => {
-                list.push(create(row));
+                if (err) {
+                    console.error(err);
+                }
+                else if (null == row) {
+                    console.error("row is null in list");
+                }
+                else {
+                    list.push(create(row));
+                }
             }, () => resolve(list));
         });
     }
@@ -107,7 +115,15 @@ class Database {
             let result = null;
             this.database.run(table.str(), () => {
                 this.database.each(table.last(undefined, column), (err, row) => {
-                    result = create(row);
+                    if (err) {
+                        console.error(err);
+                    }
+                    else if (!row) {
+                        console.error("row is null");
+                    }
+                    else {
+                        result = create(row);
+                    }
                 }, () => resolve(result));
             });
         });
