@@ -73,7 +73,7 @@ class Cex extends AbstractExchange_1.AbstractExchange {
         ['id', 'type', 'symbol1', 'symbol2'].forEach((k) => (obj[k] = raw[k]));
         ['time'].forEach((k) => {
             if (!!raw[k] && typeof raw[k] === 'string' && raw[k].indexOf('T') > 0) {
-                obj[k] = moment_1.default(raw[k]).unix() * 1000; // CEX is sending millis but unix() is in seconds
+                obj[k] = (0, moment_1.default)(raw[k]).unix() * 1000; // CEX is sending millis but unix() is in seconds
             }
             else {
                 obj[k] = parseInt(raw[k] || 0);

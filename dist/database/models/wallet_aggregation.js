@@ -25,20 +25,6 @@ row.forEach((row) => table.add(new __1.Column(row[0], row[1], row[2])));
 exports.WalletAggregatedTable = table;
 const b = (value) => new bignumber_js_1.BigNumber(value);
 class WalletAggregated extends model_1.default {
-    constructor(exchange, start, end, devise, expectedAmountMax, currentAmountMax, expectedAmountMin, currentAmountMin, expectedAmountAvg, currentAmountAvg, id) {
-        super('wallet_aggregated', id);
-        this.exchange = exchange;
-        this.start = start;
-        this.end = end;
-        this.devise = devise;
-        this.expectedAmountMax = expectedAmountMax;
-        this.currentAmountMax = currentAmountMax;
-        this.expectedAmountMin = expectedAmountMin;
-        this.currentAmountMin = currentAmountMin;
-        this.expectedAmountAvg = expectedAmountAvg;
-        this.currentAmountAvg = currentAmountAvg;
-        this.id = id;
-    }
     static last(database, exchange) {
         return database.last(exports.WalletAggregatedTable, (r) => WalletAggregated.fromRow(r), 'start');
     }
@@ -71,6 +57,20 @@ class WalletAggregated extends model_1.default {
     }
     static fromRow(h) {
         return new WalletAggregated(h.exchange, b(h.start), b(h.end), h.devise, b(h.expected_amount_max), b(h.current_amount_max), b(h.expected_amount_min), b(h.current_amount_min), b(h.expected_amount_avg), b(h.current_amount_avg), h.id);
+    }
+    constructor(exchange, start, end, devise, expectedAmountMax, currentAmountMax, expectedAmountMin, currentAmountMin, expectedAmountAvg, currentAmountAvg, id) {
+        super('wallet_aggregated', id);
+        this.exchange = exchange;
+        this.start = start;
+        this.end = end;
+        this.devise = devise;
+        this.expectedAmountMax = expectedAmountMax;
+        this.currentAmountMax = currentAmountMax;
+        this.expectedAmountMin = expectedAmountMin;
+        this.currentAmountMin = currentAmountMin;
+        this.expectedAmountAvg = expectedAmountAvg;
+        this.currentAmountAvg = currentAmountAvg;
+        this.id = id;
     }
     save(database) {
         return super.save(database);

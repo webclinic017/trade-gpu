@@ -11,6 +11,7 @@ export default class TradeEngine extends InternalTradeEngine {
     private aggregator;
     private manageBuy;
     private manageSell;
+    private accountStat;
     constructor(devises: Map<Devise, DeviseConfig>, configs: TradeConfig[], exchange: AbstractExchange, tickHolder: TickHolder, ordersHolders: Orders);
     start(): void;
     private fullfillOrder;

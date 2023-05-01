@@ -60,8 +60,8 @@ class Database {
                 if (err) {
                     console.error(err);
                 }
-                else if (null == row) {
-                    console.error("row is null in list");
+                else if (row == null) {
+                    console.error('row is null in list');
                 }
                 else {
                     list.push(create(row));
@@ -119,7 +119,7 @@ class Database {
                         console.error(err);
                     }
                     else if (!row) {
-                        console.error("row is null");
+                        console.error('row is null');
                     }
                     else {
                         result = create(row);

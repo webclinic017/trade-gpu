@@ -1,5 +1,9 @@
 import { Database } from '..';
-export declare type ModelPairs = [string, boolean | string | number | Date | undefined, boolean?][];
+export type ModelPairs = [
+    string,
+    boolean | string | number | Date | undefined,
+    boolean?
+][];
 export default abstract class Model {
     protected name: string;
     id?: number | undefined;

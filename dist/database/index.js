@@ -1,5 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.Database = exports.Table = exports.Column = void 0;
 var Column_1 = require("./Column");
 Object.defineProperty(exports, "Column", { enumerable: true, get: function () { return Column_1.Column; } });
 var Table_1 = require("./Table");

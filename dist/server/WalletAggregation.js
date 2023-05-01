@@ -34,8 +34,8 @@ class WalletAggregation {
             this.dayInfos = {};
             this.cached = false;
             // artifically create the expected number of info to fetch
-            const now = moment_1.default();
-            const date = moment_1.default()
+            const now = (0, moment_1.default)();
+            const date = (0, moment_1.default)()
                 .set('year', this.year)
                 .set('day', 1)
                 .set('month', this.month);
@@ -44,7 +44,7 @@ class WalletAggregation {
             console.log(`start of month ${startOfMonth} ${startOfMonth.unix() * 1000}`);
             const aggregated = yield runner.walletAggregated(startOfMonth.toDate(), endOfMonth.toDate());
             aggregated.forEach((a) => pushInto(this.dayInfos, a));
-            console.log(`took ${moment_1.default().diff(now, 'seconds')}`);
+            console.log(`took ${(0, moment_1.default)().diff(now, 'seconds')}`);
             this.cached = true;
         });
     }
@@ -53,7 +53,7 @@ class WalletAggregation {
         if (!this.cached)
             return true;
         // if the month and year are the same, we need to reload
-        const now = moment_1.default();
+        const now = (0, moment_1.default)();
         if (now.get('years') === this.year && now.get('month') === this.month)
             return true;
         // if the expected date is after the current date, we'll reload anyway
@@ -73,7 +73,7 @@ class WalletAggregation {
             const walletAggregateds = this.dayInfos[key];
             const walletsByDay = [];
             walletAggregateds.forEach((walletAggregated) => {
-                const date = moment_1.default(walletAggregated.start.toNumber());
+                const date = (0, moment_1.default)(walletAggregated.start.toNumber());
                 const days = date.daysInMonth();
                 while (walletsByDay.length < days)
                     walletsByDay.push([]);

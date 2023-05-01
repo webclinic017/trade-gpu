@@ -23,9 +23,9 @@ class Runner {
     constructor(exchangeObject) {
         this.exchangeObject = exchangeObject;
         this.pairs = [];
-        const configs = TradeConfigArray_1.getTradeConfigArray();
+        const configs = (0, TradeConfigArray_1.getTradeConfigArray)();
         const devises = new Map();
-        const decimals = DeviceConfigArray_1.getDeviseConfigArray();
+        const decimals = (0, DeviceConfigArray_1.getDeviseConfigArray)();
         decimals.forEach((d) => devises.set(d.name, d));
         this.tickHolder = new TickHolder_1.default(exchangeObject);
         this.ordersHolders = new orders_1.default(exchangeObject, this.tickHolder.database());
@@ -67,6 +67,7 @@ class Runner {
     start() {
         return __awaiter(this, void 0, void 0, function* () {
             try {
+                yield this.ordersHolders.init();
                 yield this.tickHolder.start();
                 console.log(`${this.exchange()} trade engine starting...`);
                 this.tradeEngine.start();

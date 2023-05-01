@@ -17,7 +17,8 @@ export interface TradeConfig {
     buy_coef: number;
     sell_coef: number;
     maximum_price_change_percent: number;
-    maximum_balance_used: number;
+    minimum_balance_used: number;
+    balance_weight_used: number;
 }
 export default class InternalTradeEngine {
     protected configs: TradeConfig[];

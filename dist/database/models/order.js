@@ -26,21 +26,6 @@ row.forEach((row) => table.add(new __1.Column(row[0], row[1], row[2])));
 exports.OrderTable = table;
 const b = (value) => new bignumber_js_1.BigNumber(value);
 class Order extends model_1.default {
-    constructor(exchange, left, right, txid, timestamp, timeout, type, price, amount, pending, completed, id) {
-        super('orders', id);
-        this.exchange = exchange;
-        this.left = left;
-        this.right = right;
-        this.txid = txid;
-        this.timestamp = timestamp;
-        this.timeout = timeout;
-        this.type = type;
-        this.price = price;
-        this.amount = amount;
-        this.pending = pending;
-        this.completed = completed;
-        this.id = id;
-    }
     static list(database, exchange) {
         return database.list(exports.OrderTable, (r) => Order.fromRow(r), [
             {
@@ -58,6 +43,21 @@ class Order extends model_1.default {
     }
     static from(h, exchange) {
         return new Order(exchange, h.symbol1, h.symbol2, b(h.id), b(h.time), !!h.timeout, h.type, b(h.price), b(h.amount), b(h.pending), false);
+    }
+    constructor(exchange, left, right, txid, timestamp, timeout, type, price, amount, pending, completed, id) {
+        super('orders', id);
+        this.exchange = exchange;
+        this.left = left;
+        this.right = right;
+        this.txid = txid;
+        this.timestamp = timestamp;
+        this.timeout = timeout;
+        this.type = type;
+        this.price = price;
+        this.amount = amount;
+        this.pending = pending;
+        this.completed = completed;
+        this.id = id;
     }
     isIn(orders) {
         return (orders.filter((o) => o.timestamp && o.timestamp.isEqualTo(this.timestamp))

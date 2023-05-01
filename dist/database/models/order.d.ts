@@ -9,7 +9,7 @@ export default class Order extends Model {
     txid: BigNumber;
     timestamp: BigNumber;
     timeout: boolean;
-    type: string;
+    type: 'buy' | 'sell';
     price: BigNumber;
     amount: BigNumber;
     pending: BigNumber;
@@ -19,7 +19,7 @@ export default class Order extends Model {
     static last(database: Database, exchange: string): Promise<Order | null>;
     static fromRow(h: any): Order;
     static from(h: any, exchange: string): Order;
-    constructor(exchange: string, left: string, right: string, txid: BigNumber, timestamp: BigNumber, timeout: boolean, type: string, price: BigNumber, amount: BigNumber, pending: BigNumber, completed: boolean, id?: number | undefined);
+    constructor(exchange: string, left: string, right: string, txid: BigNumber, timestamp: BigNumber, timeout: boolean, type: 'buy' | 'sell', price: BigNumber, amount: BigNumber, pending: BigNumber, completed: boolean, id?: number | undefined);
     isIn(orders: Order[]): boolean;
     save(database: Database): Promise<Order>;
     json(): any;

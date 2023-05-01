@@ -46,18 +46,18 @@ class WalletAggregatorClass {
             this.aggregating = true;
             try {
                 const last = yield wallet_aggregation_1.default.last(this.database, this.exchange);
-                const barrier = moment_1.default()
+                const barrier = (0, moment_1.default)()
                     .startOf('hour')
                     .add(-30, 'minutes')
                     .endOf('hour');
-                const lastDate = last ? moment_1.default(last.start.toNumber()) : undefined;
+                const lastDate = last ? (0, moment_1.default)(last.start.toNumber()) : undefined;
                 let lastWalletDate;
                 if (!lastDate) {
                     const wallet = yield wallet_1.default.first(this.database, this.exchange);
                     if (!wallet) {
                         throw 'no wallet saved, cancelling creation';
                     }
-                    lastWalletDate = moment_1.default(wallet.timestamp.toNumber()).startOf('hour');
+                    lastWalletDate = (0, moment_1.default)(wallet.timestamp.toNumber()).startOf('hour');
                 }
                 if (!lastWalletDate && !lastDate)
                     throw 'invalid case';

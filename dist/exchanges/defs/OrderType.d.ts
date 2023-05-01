@@ -1,1 +1,1 @@
-export declare type OrderType = 'buy' | 'sell';
+export type OrderType = 'buy' | 'sell';

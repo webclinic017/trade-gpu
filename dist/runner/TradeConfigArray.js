@@ -8,7 +8,8 @@ const configs = [
         buy_coef: 0.995,
         sell_coef: 1.028,
         maximum_price_change_percent: 10,
-        maximum_balance_used: 200,
+        minimum_balance_used: 100,
+        balance_weight_used: 1
     },
     {
         from: 'EUR',
@@ -16,7 +17,8 @@ const configs = [
         buy_coef: 0.995,
         sell_coef: 1.028,
         maximum_price_change_percent: 8,
-        maximum_balance_used: 100,
+        minimum_balance_used: 100,
+        balance_weight_used: 1
     },
     {
         from: 'EUR',
@@ -24,7 +26,8 @@ const configs = [
         buy_coef: 0.995,
         sell_coef: 1.028,
         maximum_price_change_percent: 10,
-        maximum_balance_used: 60,
+        minimum_balance_used: 100,
+        balance_weight_used: 1
     },
     {
         from: 'EUR',
@@ -32,7 +35,8 @@ const configs = [
         buy_coef: 0.995,
         sell_coef: 1.028,
         maximum_price_change_percent: 5,
-        maximum_balance_used: 60,
+        minimum_balance_used: 100,
+        balance_weight_used: 1
     },
     {
         from: 'EUR',
@@ -40,15 +44,17 @@ const configs = [
         buy_coef: 0.995,
         sell_coef: 1.028,
         maximum_price_change_percent: 10,
-        maximum_balance_used: 200,
+        minimum_balance_used: 100,
+        balance_weight_used: 1
     },
     {
         from: 'USD',
         to: 'DOGE',
         buy_coef: 0.995,
         sell_coef: 1.028,
-        maximum_price_change_percent: 5,
-        maximum_balance_used: 100,
+        maximum_price_change_percent: 10,
+        minimum_balance_used: 100,
+        balance_weight_used: 1
     },
     {
         from: 'EUR',
@@ -56,7 +62,8 @@ const configs = [
         buy_coef: 0.995,
         sell_coef: 1.028,
         maximum_price_change_percent: 10,
-        maximum_balance_used: 160,
+        minimum_balance_used: 100,
+        balance_weight_used: 1
     },
     {
         from: 'USD',
@@ -64,7 +71,8 @@ const configs = [
         buy_coef: 0.995,
         sell_coef: 1.028,
         maximum_price_change_percent: 5,
-        maximum_balance_used: 60,
+        minimum_balance_used: 100,
+        balance_weight_used: 1
     },
     {
         from: 'USD',
@@ -72,7 +80,8 @@ const configs = [
         buy_coef: 0.995,
         sell_coef: 1.028,
         maximum_price_change_percent: 20,
-        maximum_balance_used: 200,
+        minimum_balance_used: 100,
+        balance_weight_used: 1
     },
     {
         from: 'USD',
@@ -80,7 +89,8 @@ const configs = [
         buy_coef: 0.985,
         sell_coef: 1.028,
         maximum_price_change_percent: 20,
-        maximum_balance_used: 60,
+        minimum_balance_used: 100,
+        balance_weight_used: 1
     },
     {
         from: 'USD',
@@ -88,7 +98,8 @@ const configs = [
         buy_coef: 0.985,
         sell_coef: 1.028,
         maximum_price_change_percent: 20,
-        maximum_balance_used: 60,
+        minimum_balance_used: 100,
+        balance_weight_used: 1
     },
     {
         from: 'USD',
@@ -96,7 +107,8 @@ const configs = [
         buy_coef: 0.985,
         sell_coef: 1.028,
         maximum_price_change_percent: 20,
-        maximum_balance_used: 60,
+        minimum_balance_used: 100,
+        balance_weight_used: 1
     },
     {
         from: 'USD',
@@ -104,7 +116,8 @@ const configs = [
         buy_coef: 0.985,
         sell_coef: 1.028,
         maximum_price_change_percent: 20,
-        maximum_balance_used: 100,
+        minimum_balance_used: 100,
+        balance_weight_used: 1
     },
     {
         from: 'USD',
@@ -112,15 +125,8 @@ const configs = [
         buy_coef: 0.985,
         sell_coef: 1.022,
         maximum_price_change_percent: 20,
-        maximum_balance_used: 60,
-    },
-    {
-        from: 'USD',
-        to: 'MHC',
-        buy_coef: 0.985,
-        sell_coef: 1.022,
-        maximum_price_change_percent: 20,
-        maximum_balance_used: 60,
+        minimum_balance_used: 100,
+        balance_weight_used: 1
     },
     {
         from: 'USD',
@@ -128,7 +134,26 @@ const configs = [
         buy_coef: 0.985,
         sell_coef: 1.022,
         maximum_price_change_percent: 20,
-        maximum_balance_used: 60,
+        minimum_balance_used: 100,
+        balance_weight_used: 1
+    },
+    {
+        from: 'USD',
+        to: 'YFI',
+        buy_coef: 0.995,
+        sell_coef: 1.028,
+        maximum_price_change_percent: 10,
+        minimum_balance_used: 100,
+        balance_weight_used: 1
+    },
+    {
+        from: 'USD',
+        to: 'MATIC',
+        buy_coef: 0.995,
+        sell_coef: 1.028,
+        maximum_price_change_percent: 10,
+        minimum_balance_used: 100,
+        balance_weight_used: 1
     },
 ];
 function getTradeConfigArray() {

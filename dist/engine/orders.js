@@ -28,17 +28,6 @@ order placed
 class Orders {
     constructor(exchange, database) {
         this.exchange = exchange;
-        this.internalList = (from, to) => __awaiter(this, void 0, void 0, function* () {
-            if (this.loaded) {
-                return this.orders.filter((order) => order.left === to && order.right === from);
-            }
-            const list = yield order_1.default.list(this.database, this.exchange.name());
-            this.loaded = true;
-            this.orders = list;
-            // this.toComplete = this.list.filter(o => !o.completed);
-            // from = FIAT and to = CRYPTO for instance
-            return list.filter((order) => order.left === to && order.right === from);
-        });
         this.database = database;
         this.loaded = false;
         this.orders = [];
@@ -46,7 +35,7 @@ class Orders {
     list(from, to) {
         return __awaiter(this, void 0, void 0, function* () {
             try {
-                const orders = yield this.internalList(from, to);
+                const orders = yield this.filter(from, to);
                 return { from, to, orders };
             }
             catch (err) {
@@ -54,9 +43,18 @@ class Orders {
             }
         });
     }
+    init() {
+        return __awaiter(this, void 0, void 0, function* () {
+            if (!!this.loaded)
+                return;
+            const list = yield order_1.default.list(this.database, this.exchange.name());
+            this.loaded = true;
+            this.orders = list;
+        });
+    }
     fetch(from, to) {
         return __awaiter(this, void 0, void 0, function* () {
-            yield this.internalList(from, to);
+            yield this.filter(from, to);
             const shortOrders = yield this.exchange.open_orders();
             const obtainedOrders = shortOrders.map((o) => order_1.default.from(o, this.exchange.name()));
             const newOrders = obtainedOrders.filter((o) => !o.isIn(this.orders));
@@ -89,9 +87,17 @@ class Orders {
             else {
                 yield Promise.all(toSave.map((o) => o.save(this.database)));
             }
-            return this.internalList(from, to);
+            return this.filter(from, to);
         });
     }
+    filter(from, to) {
+        if (this.loaded) {
+            return this.orders.filter((order) => order.left === to && order.right === from);
+        }
+        // from = FIAT and to = CRYPTO for instance
+        return this.orders.filter((order) => order.left === to && order.right === from);
+    }
+    ;
 }
 exports.default = Orders;
 //# sourceMappingURL=orders.js.map

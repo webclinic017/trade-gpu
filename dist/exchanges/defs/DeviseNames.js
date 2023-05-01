@@ -18,7 +18,8 @@ exports.DeviseNames = [
     'OMG',
     'XLM',
     'ONT',
-    'MHC',
     'ONG',
+    'YFI',
+    'MATIC',
 ];
 //# sourceMappingURL=DeviseNames.js.map

@@ -13,6 +13,7 @@ export default class Orders {
         to: Devise;
         orders: Order[];
     }>;
+    init(): Promise<void>;
     fetch(from: Devise, to: Devise): Promise<Order[]>;
-    private internalList;
+    filter(from: Devise, to: Devise): Order[];
 }

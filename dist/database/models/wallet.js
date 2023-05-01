@@ -20,15 +20,6 @@ row.forEach((row) => table.add(new __1.Column(row[0], row[1], row[2])));
 exports.WalletTable = table;
 const b = (value) => new bignumber_js_1.BigNumber(value);
 class Wallet extends model_1.default {
-    constructor(exchange, timestamp, devise, expectedAmount, currentAmount, id) {
-        super('wallet', id);
-        this.exchange = exchange;
-        this.timestamp = timestamp;
-        this.devise = devise;
-        this.expectedAmount = expectedAmount;
-        this.currentAmount = currentAmount;
-        this.id = id;
-    }
     static list(database, exchange, from, to) {
         return Wallet.listCallback(database, exchange, (r) => Wallet.fromRow(r), from, to);
     }
@@ -67,6 +58,15 @@ class Wallet extends model_1.default {
     }
     static fromRow(h) {
         return new Wallet(h.exchange, b(h.timestamp), h.devise, b(h.expected_amount), b(h.current_amount), h.id);
+    }
+    constructor(exchange, timestamp, devise, expectedAmount, currentAmount, id) {
+        super('wallet', id);
+        this.exchange = exchange;
+        this.timestamp = timestamp;
+        this.devise = devise;
+        this.expectedAmount = expectedAmount;
+        this.currentAmount = currentAmount;
+        this.id = id;
     }
     isIn(orders) {
         return (orders.filter((o) => o.timestamp && o.timestamp.isEqualTo(this.timestamp))

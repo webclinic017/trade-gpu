@@ -59,7 +59,7 @@ class InternalTradeEngine {
                 ]);
                 const configuration = this.currency(config.from, config.to);
                 if (!configuration)
-                    throw `couldn't load configuration for ${config.from} Ò-> ${config.to}`;
+                    throw `couldn't load configuration for ${config.from} -> ${config.to}`;
                 const tick = results[0];
                 const orders = results[1] || [];
                 if (!tick)

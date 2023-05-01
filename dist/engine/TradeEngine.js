@@ -18,14 +18,15 @@ const wallet_1 = __importDefault(require("../database/models/wallet"));
 const InternalTradeEngine_1 = __importDefault(require("./InternalTradeEngine"));
 const wallet_aggregation_1 = __importDefault(require("../database/models/wallet_aggregation"));
 const WalletAggregator_1 = __importDefault(require("./WalletAggregator"));
+const account_1 = require("./account");
 const type_manager_1 = require("./type_manager");
 bignumber_js_1.BigNumber.set({ DECIMAL_PLACES: 10, ROUNDING_MODE: bignumber_js_1.BigNumber.ROUND_FLOOR });
 class TradeEngine extends InternalTradeEngine_1.default {
     constructor(devises, configs, exchange, tickHolder, ordersHolders) {
         super(configs, exchange, tickHolder, ordersHolders);
-        this.fullfillOrder = (config) => __awaiter(this, void 0, void 0, function* () {
+        this.fullfillOrder = (config, deviseTotal = { devise: config.from, total: new bignumber_js_1.BigNumber(0), totalWeight: 0 }) => __awaiter(this, void 0, void 0, function* () {
             const { from, to } = config;
-            this.log(`managing for ${from}->${to}`);
+            this.log(`managing for ${from}->${to}, max can be ${deviseTotal.total.toNumber()}`);
             try {
                 const results = yield Promise.all([
                     ticks_1.default.last(this.database(), this.exchange.name(), config.to, config.from),
@@ -74,9 +75,22 @@ class TradeEngine extends InternalTradeEngine_1.default {
                 // this.log("account_balance " + balances[config.from].available.toFixed(), from);
                 // this.log("account_balance " + balances[config.to].available.toFixed(), to);
                 const toBalance = to.available;
-                let fromBalance = from.available;
-                if (fromBalance.isGreaterThan(config.maximum_balance_used)) {
-                    fromBalance = new bignumber_js_1.BigNumber(config.maximum_balance_used);
+                let fromBalance = new bignumber_js_1.BigNumber(config.minimum_balance_used);
+                console.log(`totalWeight:=${deviseTotal.totalWeight} / weightUsed:=${config.balance_weight_used}`);
+                if (deviseTotal.totalWeight > 0 && config.balance_weight_used > 0) {
+                    const toUse = deviseTotal.total //total x weight / totalWeight
+                        .multipliedBy(config.balance_weight_used)
+                        .dividedBy(deviseTotal.totalWeight);
+                    console.log(`${toUse.toNumber()} = ${deviseTotal.total.toNumber()} * ${config.balance_weight_used} / ${deviseTotal.totalWeight}`);
+                    if (toUse.isGreaterThan(fromBalance)) {
+                        this.log(`adjusting from weight, using ${toUse.toNumber()} instead of ${fromBalance.toNumber()}`);
+                        fromBalance = toUse;
+                    }
+                }
+                // now adjust possibly the ouput
+                if (from.available.isLessThan(config.minimum_balance_used)) {
+                    console.log(`balance (${from.available}) is less than minimum (${config.minimum_balance_used}), recomputing`);
+                    fromBalance = from.available;
                 }
                 const priceToSellCurrentTick = (price === null || price === void 0 ? void 0 : price.multipliedBy(config.sell_coef)) || new bignumber_js_1.BigNumber(0);
                 const lastBuyComplete = this.last(orders, 'buy');
@@ -98,39 +112,9 @@ class TradeEngine extends InternalTradeEngine_1.default {
             }
             return false;
         });
-        this.afterTickStarted = () => __awaiter(this, void 0, void 0, function* () {
-            let i = 0;
-            yield this.load_configuration();
-            const array = {};
-            while (i < this.configs.length) {
-                const config = this.configs[i];
-                const { from, to } = config;
-                try {
-                    const [expectedValue, currentValue] = yield this.expectedValue(config);
-                    if (!array[from]) {
-                        array[from] = {
-                            expectedValue: new bignumber_js_1.BigNumber(0),
-                            currentValue: new bignumber_js_1.BigNumber(0),
-                        };
-                    }
-                    array[from].expectedValue = array[from].expectedValue.plus(expectedValue);
-                    array[from].currentValue = array[from].currentValue.plus(currentValue);
-                }
-                catch (e) {
-                    this.error('Error in config', e);
-                }
-                i++;
-            }
-            yield this.manageWallets(array);
-            i = 0;
-            while (i < this.configs.length) {
-                yield this.fullfillOrder(this.configs[i]);
-                i++;
-            }
-            setTimeout(() => this.afterTickStarted(), 60000);
-        });
         this.started = false;
         this.aggregator = new WalletAggregator_1.default(tickHolder.database(), exchange.name());
+        this.accountStat = new account_1.AccountStat(exchange, configs, ordersHolders);
         const log = (text, value) => this.log(text, value);
         this.manageBuy = new type_manager_1.ManageBuy(exchange, tickHolder.database(), devises, log, ordersHolders);
         this.manageSell = new type_manager_1.ManageSell(exchange, tickHolder.database(), devises, log, ordersHolders);
@@ -200,6 +184,48 @@ class TradeEngine extends InternalTradeEngine_1.default {
             }
         });
     }
+    afterTickStarted() {
+        return __awaiter(this, void 0, void 0, function* () {
+            try {
+                let i = 0;
+                yield this.load_configuration();
+                const array = {};
+                while (i < this.configs.length) {
+                    const config = this.configs[i];
+                    const { from, to } = config;
+                    try {
+                        const [expectedValue, currentValue] = yield this.expectedValue(config);
+                        if (!array[from]) {
+                            array[from] = {
+                                expectedValue: new bignumber_js_1.BigNumber(0),
+                                currentValue: new bignumber_js_1.BigNumber(0),
+                            };
+                        }
+                        array[from].expectedValue = array[from].expectedValue.plus(expectedValue);
+                        array[from].currentValue = array[from].currentValue.plus(currentValue);
+                    }
+                    catch (e) {
+                        this.error('Error in config', e);
+                    }
+                    i++;
+                }
+                yield this.manageWallets(array);
+                const stats = yield this.accountStat.stats();
+                i = 0;
+                while (i < this.configs.length) {
+                    const config = this.configs[i];
+                    const stat = stats.values.find(v => v.devise == config.from);
+                    yield this.fullfillOrder(config, stat);
+                    i++;
+                }
+            }
+            catch (err) {
+                this.error("Having exception to handle", err);
+            }
+            setTimeout(() => this.afterTickStarted(), 60000);
+        });
+    }
+    ;
 }
 exports.default = TradeEngine;
 //# sourceMappingURL=TradeEngine.js.map

@@ -22,28 +22,12 @@ const row = [
     ['bid', 'TEXT', { nullable: false }],
     ['ask', 'TEXT', { nullable: false }],
     ['priceChange', 'TEXT', { nullable: false }],
-    ['priceChangePercentage', 'TEXT', { nullable: false }],
+    ['priceChangePercentage', 'TEXT', { nullable: false }], // will be transformed to/from BigNumer
 ];
 row.forEach((r) => table.add(new __1.Column(r[0], r[1], r[2])));
 exports.TickTable = table;
 const b = (value) => new bignumber_js_1.BigNumber(value);
 class Tick extends model_1.default {
-    constructor(left, right, exchange, timestamp, low, high, last, volume, volume30d, bid, ask, priceChange, priceChangePercentage) {
-        super('tick');
-        this.left = left;
-        this.right = right;
-        this.exchange = exchange;
-        this.timestamp = timestamp;
-        this.low = low;
-        this.high = high;
-        this.last = last;
-        this.volume = volume;
-        this.volume30d = volume30d;
-        this.bid = bid;
-        this.ask = ask;
-        this.priceChange = priceChange;
-        this.priceChangePercentage = priceChangePercentage;
-    }
     static list(database, exchange) {
         return database.list(exports.TickTable, (r) => Tick.fromRow(r), [
             {
@@ -62,6 +46,22 @@ class Tick extends model_1.default {
     static from(h, exchange) {
         const split = (h.pair || 'XXX:XXX').split(':');
         return new Tick(split[0], split[1], exchange, b(h.timestamp), b(h.low), b(h.high), b(h.last), b(h.volume), b(h.volume30d), b(h.bid), b(h.ask), b(h.priceChange), b(h.priceChangePercentage));
+    }
+    constructor(left, right, exchange, timestamp, low, high, last, volume, volume30d, bid, ask, priceChange, priceChangePercentage) {
+        super('tick');
+        this.left = left;
+        this.right = right;
+        this.exchange = exchange;
+        this.timestamp = timestamp;
+        this.low = low;
+        this.high = high;
+        this.last = last;
+        this.volume = volume;
+        this.volume30d = volume30d;
+        this.bid = bid;
+        this.ask = ask;
+        this.priceChange = priceChange;
+        this.priceChangePercentage = priceChangePercentage;
     }
     pairs() {
         return [

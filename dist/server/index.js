@@ -35,10 +35,11 @@ class Server {
     constructor(runner) {
         this.runner = runner;
         this.data = {};
-        this.app = express_1.default();
+        this.app = (0, express_1.default)();
         this.key = server_1.default.key ? fs_1.default.readFileSync(server_1.default.key) : undefined;
         this.cert = server_1.default.cert ? fs_1.default.readFileSync(server_1.default.cert) : undefined;
-        if (!server_1.default.https) {
+        console.log("config ?" + server_1.default.https);
+        if (!!server_1.default.https) {
             this.server = https_1.default.createServer({ key: this.key, cert: this.cert }, this.app);
         }
         else {
@@ -62,7 +63,7 @@ class Server {
             try {
                 const month = Number.parseInt((_a = req === null || req === void 0 ? void 0 : req.params) === null || _a === void 0 ? void 0 : _a.month) - 1;
                 const year = Number.parseInt((_b = req === null || req === void 0 ? void 0 : req.params) === null || _b === void 0 ? void 0 : _b.year);
-                const currentYear = moment_1.default().year();
+                const currentYear = (0, moment_1.default)().year();
                 if (month < 0 || month > 11)
                     throw `invalid month : ${month}`;
                 if (Math.abs(year - currentYear) > 10)
