@@ -76,12 +76,12 @@ class TradeEngine extends InternalTradeEngine_1.default {
                 // this.log("account_balance " + balances[config.to].available.toFixed(), to);
                 const toBalance = to.available;
                 let fromBalance = new bignumber_js_1.BigNumber(config.minimum_balance_used);
-                console.log(`totalWeight:=${deviseTotal.totalWeight} / weightUsed:=${config.balance_weight_used}`);
-                if (deviseTotal.totalWeight > 0 && config.balance_weight_used > 0) {
+                console.log(`totalWeight:=${deviseTotal.totalWeight} / weightUsed:=${config.balanceWeightUsed}`);
+                if (deviseTotal.totalWeight > 0 && config.balanceWeightUsed > 0) {
                     const toUse = deviseTotal.total //total x weight / totalWeight
-                        .multipliedBy(config.balance_weight_used)
+                        .multipliedBy(config.balanceWeightUsed)
                         .dividedBy(deviseTotal.totalWeight);
-                    console.log(`${toUse.toNumber()} = ${deviseTotal.total.toNumber()} * ${config.balance_weight_used} / ${deviseTotal.totalWeight}`);
+                    console.log(`${toUse.toNumber()} = ${deviseTotal.total.toNumber()} * ${config.balanceWeightUsed} / ${deviseTotal.totalWeight}`);
                     if (toUse.isGreaterThan(fromBalance)) {
                         this.log(`adjusting from weight, using ${toUse.toNumber()} instead of ${fromBalance.toNumber()}`);
                         fromBalance = toUse;
@@ -214,7 +214,7 @@ class TradeEngine extends InternalTradeEngine_1.default {
                 i = 0;
                 while (i < this.configs.length) {
                     const config = this.configs[i];
-                    const stat = stats.values.find(v => v.devise == config.from);
+                    const stat = stats.values.find(v => v.devise === config.from);
                     yield this.fullfillOrder(config, stat);
                     i++;
                 }

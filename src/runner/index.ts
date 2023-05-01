@@ -71,6 +71,8 @@ export class Runner {
 
   public async start() {
     try {
+      await this.ordersHolders.init();
+
       await this.tickHolder.start();
       console.log(`${this.exchange()} trade engine starting...`);
       this.tradeEngine.start();

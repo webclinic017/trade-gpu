@@ -22,7 +22,8 @@ export interface TradeConfig {
   buy_coef: number;
   sell_coef: number;
   maximum_price_change_percent: number;
-  maximum_balance_used: number;
+  minimum_balance_used: number;
+  balanceWeightUsed: number;
 }
 
 export default class InternalTradeEngine {
@@ -78,7 +79,7 @@ export default class InternalTradeEngine {
       ]);
 
       const configuration = this.currency(config.from, config.to);
-      if (!configuration) throw `couldn't load configuration for ${config.from} Ò-> ${config.to}`;
+      if (!configuration) throw `couldn't load configuration for ${config.from} -> ${config.to}`;
 
       const tick = results[0];
       const orders = results[1] || [];

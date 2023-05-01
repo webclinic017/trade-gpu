@@ -38,7 +38,6 @@ class Server {
         this.app = (0, express_1.default)();
         this.key = server_1.default.key ? fs_1.default.readFileSync(server_1.default.key) : undefined;
         this.cert = server_1.default.cert ? fs_1.default.readFileSync(server_1.default.cert) : undefined;
-        console.log("config ?" + server_1.default.https);
         if (!!server_1.default.https) {
             this.server = https_1.default.createServer({ key: this.key, cert: this.cert }, this.app);
         }

@@ -12,6 +12,7 @@ import InternalTradeEngine, {
 } from './InternalTradeEngine';
 import WalletAggregated from '../database/models/wallet_aggregation';
 import WalletAggregator from './WalletAggregator';
+import { AccountStat, DeviseTotal } from './account';
 
 import { ManageBuy, ManageSell } from './type_manager';
 
@@ -32,6 +33,8 @@ export default class TradeEngine extends InternalTradeEngine {
 
   private manageSell: ManageSell;
 
+  private accountStat: AccountStat;
+
   constructor(
     devises: Map<Devise, DeviseConfig>,
     configs: TradeConfig[],
@@ -45,6 +48,8 @@ export default class TradeEngine extends InternalTradeEngine {
       tickHolder.database(),
       exchange.name(),
     );
+
+    this.accountStat = new AccountStat(exchange, configs, ordersHolders);
 
     const log = (text: string, value?: any) => this.log(text, value);
     this.manageBuy = new ManageBuy(
@@ -71,9 +76,18 @@ export default class TradeEngine extends InternalTradeEngine {
     }
   }
 
-  private fullfillOrder = async (config: TradeConfig) => {
+  private fullfillOrder = async (
+    config: TradeConfig,
+    deviseTotal: DeviseTotal = {
+      devise: config.from,
+      total: new BigNumber(0),
+      totalWeight: 0,
+    },
+  ) => {
     const { from, to } = config;
-    this.log(`managing for ${from}->${to}`);
+    this.log(
+      `managing for ${from}->${to}, max can be ${deviseTotal.total.toNumber()}`,
+    );
 
     try {
       const results = await Promise.all([
@@ -136,10 +150,37 @@ export default class TradeEngine extends InternalTradeEngine {
       // this.log("account_balance " + balances[config.to].available.toFixed(), to);
 
       const toBalance = to.available;
-      let fromBalance = from.available;
+      let fromBalance = new BigNumber(config.minimum_balance_used);
 
-      if (fromBalance.isGreaterThan(config.maximum_balance_used)) {
-        fromBalance = new BigNumber(config.maximum_balance_used);
+      console.log(
+        `totalWeight:=${deviseTotal.totalWeight} / weightUsed:=${config.balanceWeightUsed}`,
+      );
+
+      if (deviseTotal.totalWeight > 0 && config.balanceWeightUsed > 0) {
+        const toUse = deviseTotal.total // total x weight / totalWeight
+          .multipliedBy(config.balanceWeightUsed)
+          .dividedBy(deviseTotal.totalWeight);
+
+        console.log(
+          `${toUse.toNumber()} = ${deviseTotal.total.toNumber()} * ${
+            config.balanceWeightUsed
+          } / ${deviseTotal.totalWeight}`,
+        );
+
+        if (toUse.isGreaterThan(fromBalance)) {
+          this.log(
+            `adjusting from weight, using ${toUse.toNumber()} instead of ${fromBalance.toNumber()}`,
+          );
+          fromBalance = toUse;
+        }
+      }
+
+      // now adjust possibly the ouput
+      if (from.available.isLessThan(config.minimum_balance_used)) {
+        console.log(
+          `balance (${from.available}) is less than minimum (${config.minimum_balance_used}), recomputing`,
+        );
+        fromBalance = from.available;
       }
 
       const priceToSellCurrentTick = price?.multipliedBy(config.sell_coef) || new BigNumber(0);
@@ -261,39 +302,49 @@ export default class TradeEngine extends InternalTradeEngine {
     }
   }
 
-  private afterTickStarted = async () => {
-    let i = 0;
+  private async afterTickStarted() {
+    try {
+      let i = 0;
 
-    await this.load_configuration();
+      await this.load_configuration();
 
-    const array: DeviseValue = {};
-    while (i < this.configs.length) {
-      const config = this.configs[i];
-      const { from, to } = config;
-      try {
-        const [expectedValue, currentValue] = await this.expectedValue(config);
-        if (!array[from]) {
-          array[from] = {
-            expectedValue: new BigNumber(0),
-            currentValue: new BigNumber(0),
-          };
+      const array: DeviseValue = {};
+      while (i < this.configs.length) {
+        const config = this.configs[i];
+        const { from, to } = config;
+        try {
+          const [expectedValue, currentValue] = await this.expectedValue(
+            config,
+          );
+          if (!array[from]) {
+            array[from] = {
+              expectedValue: new BigNumber(0),
+              currentValue: new BigNumber(0),
+            };
+          }
+          array[from].expectedValue = array[from].expectedValue.plus(expectedValue);
+          array[from].currentValue = array[from].currentValue.plus(currentValue);
+        } catch (e) {
+          this.error('Error in config', e);
         }
-        array[from].expectedValue = array[from].expectedValue.plus(expectedValue);
-        array[from].currentValue = array[from].currentValue.plus(currentValue);
-      } catch (e) {
-        this.error('Error in config', e);
+        i++;
       }
-      i++;
-    }
 
-    await this.manageWallets(array);
+      await this.manageWallets(array);
 
-    i = 0;
-    while (i < this.configs.length) {
-      await this.fullfillOrder(this.configs[i]);
-      i++;
+      const stats = await this.accountStat.stats();
+
+      i = 0;
+      while (i < this.configs.length) {
+        const config = this.configs[i];
+        const stat = stats.values.find((v) => v.devise === config.from);
+        await this.fullfillOrder(config, stat);
+        i++;
+      }
+    } catch (err) {
+      this.error('Having exception to handle', err);
     }
 
     setTimeout(() => this.afterTickStarted(), 60000);
-  };
+  }
 }

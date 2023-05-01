@@ -15,6 +15,7 @@ export const DeviseNames = [
   'OMG',
   'XLM',
   'ONT',
-  'MHC',
   'ONG',
+  'YFI',
+  'MATIC',
 ] as const;

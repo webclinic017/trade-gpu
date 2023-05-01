@@ -34,15 +34,22 @@ export default class Orders {
     to: Devise,
   ): Promise<{ from: Devise; to: Devise; orders: Order[] }> {
     try {
-      const orders = await this.internalList(from, to);
+      const orders = await this.filter(from, to);
       return { from, to, orders };
     } catch (err) {
       return { from, to, orders: [] };
     }
   }
 
+  public async init() {
+    if (this.loaded) return;
+    const list = await Order.list(this.database, this.exchange.name());
+    this.loaded = true;
+    this.orders = list;
+  }
+
   public async fetch(from: Devise, to: Devise): Promise<Order[]> {
-    await this.internalList(from, to);
+    await this.filter(from, to);
     const shortOrders = await this.exchange.open_orders();
 
     const obtainedOrders = shortOrders.map((o) => Order.from(o, this.exchange.name()));
@@ -94,22 +101,19 @@ export default class Orders {
       await Promise.all(toSave.map((o) => o.save(this.database)));
     }
 
-    return this.internalList(from, to);
+    return this.filter(from, to);
   }
 
-  private internalList = async (from: Devise, to: Devise) => {
+  public filter(from: Devise, to: Devise) {
     if (this.loaded) {
       return this.orders.filter(
         (order) => order.left === to && order.right === from,
       );
     }
 
-    const list = await Order.list(this.database, this.exchange.name());
-    this.loaded = true;
-    this.orders = list;
-    // this.toComplete = this.list.filter(o => !o.completed);
-
     // from = FIAT and to = CRYPTO for instance
-    return list.filter((order) => order.left === to && order.right === from);
-  };
+    return this.orders.filter(
+      (order) => order.left === to && order.right === from,
+    );
+  }
 }

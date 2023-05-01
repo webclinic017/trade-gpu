@@ -25,18 +25,17 @@ class AccountStat {
             const values = [];
             const { balances } = yield this.exchange.account_balance();
             const wrapper = {};
-            this.configs.forEach(({ from, to, balance_weight_used }) => {
+            this.configs.forEach(({ from, to, balanceWeightUsed }) => {
                 const holder = wrapper[from] || (() => {
                     return wrapper[from] = { to: [] };
                 })();
                 const values = holder.to;
-                if (!values.find(v => v.devise == to))
-                    values.push({ devise: to, weight: balance_weight_used });
+                if (!values.find(v => v.devise === to))
+                    values.push({ devise: to, weight: balanceWeightUsed });
             });
             const froms = Object.keys(wrapper);
-            console.log("froms", froms);
             froms.forEach(from => {
-                const totalHolder = values.find(v => v.devise == from) || (() => {
+                const totalHolder = values.find(v => v.devise === from) || (() => {
                     const holder = { devise: from, total: new bignumber_js_1.default(0), totalWeight: 0 };
                     values.push(holder);
                     return holder;
@@ -56,7 +55,7 @@ class AccountStat {
                     if (!current)
                         return;
                     const expectedValue = current.price.multipliedBy(current.amount);
-                    if (current.type == 'buy') {
+                    if (current.type === 'buy') {
                         console.log(`  ${devise} => buy    : ${expectedValue.toNumber()}`);
                     }
                     else {

@@ -5,5 +5,5 @@ export declare function getTradeConfigArray(): {
     sell_coef: number;
     maximum_price_change_percent: number;
     minimum_balance_used: number;
-    balance_weight_used: number;
+    balanceWeightUsed: number;
 }[];

@@ -9,7 +9,7 @@ const configs = [
         sell_coef: 1.028,
         maximum_price_change_percent: 10,
         minimum_balance_used: 100,
-        balance_weight_used: 1
+        balanceWeightUsed: 1
     },
     {
         from: 'EUR',
@@ -18,7 +18,7 @@ const configs = [
         sell_coef: 1.028,
         maximum_price_change_percent: 8,
         minimum_balance_used: 100,
-        balance_weight_used: 1
+        balanceWeightUsed: 1
     },
     {
         from: 'EUR',
@@ -27,7 +27,7 @@ const configs = [
         sell_coef: 1.028,
         maximum_price_change_percent: 10,
         minimum_balance_used: 100,
-        balance_weight_used: 1
+        balanceWeightUsed: 1
     },
     {
         from: 'EUR',
@@ -36,7 +36,7 @@ const configs = [
         sell_coef: 1.028,
         maximum_price_change_percent: 5,
         minimum_balance_used: 100,
-        balance_weight_used: 1
+        balanceWeightUsed: 1
     },
     {
         from: 'EUR',
@@ -45,7 +45,7 @@ const configs = [
         sell_coef: 1.028,
         maximum_price_change_percent: 10,
         minimum_balance_used: 100,
-        balance_weight_used: 1
+        balanceWeightUsed: 1
     },
     {
         from: 'USD',
@@ -54,7 +54,7 @@ const configs = [
         sell_coef: 1.028,
         maximum_price_change_percent: 10,
         minimum_balance_used: 100,
-        balance_weight_used: 1
+        balanceWeightUsed: 1
     },
     {
         from: 'EUR',
@@ -63,7 +63,7 @@ const configs = [
         sell_coef: 1.028,
         maximum_price_change_percent: 10,
         minimum_balance_used: 100,
-        balance_weight_used: 1
+        balanceWeightUsed: 1
     },
     {
         from: 'USD',
@@ -72,7 +72,7 @@ const configs = [
         sell_coef: 1.028,
         maximum_price_change_percent: 5,
         minimum_balance_used: 100,
-        balance_weight_used: 1
+        balanceWeightUsed: 1
     },
     {
         from: 'USD',
@@ -81,7 +81,7 @@ const configs = [
         sell_coef: 1.028,
         maximum_price_change_percent: 20,
         minimum_balance_used: 100,
-        balance_weight_used: 1
+        balanceWeightUsed: 1
     },
     {
         from: 'USD',
@@ -90,7 +90,7 @@ const configs = [
         sell_coef: 1.028,
         maximum_price_change_percent: 20,
         minimum_balance_used: 100,
-        balance_weight_used: 1
+        balanceWeightUsed: 1
     },
     {
         from: 'USD',
@@ -99,7 +99,7 @@ const configs = [
         sell_coef: 1.028,
         maximum_price_change_percent: 20,
         minimum_balance_used: 100,
-        balance_weight_used: 1
+        balanceWeightUsed: 1
     },
     {
         from: 'USD',
@@ -108,7 +108,7 @@ const configs = [
         sell_coef: 1.028,
         maximum_price_change_percent: 20,
         minimum_balance_used: 100,
-        balance_weight_used: 1
+        balanceWeightUsed: 1
     },
     {
         from: 'USD',
@@ -117,7 +117,7 @@ const configs = [
         sell_coef: 1.028,
         maximum_price_change_percent: 20,
         minimum_balance_used: 100,
-        balance_weight_used: 1
+        balanceWeightUsed: 1
     },
     {
         from: 'USD',
@@ -126,7 +126,7 @@ const configs = [
         sell_coef: 1.022,
         maximum_price_change_percent: 20,
         minimum_balance_used: 100,
-        balance_weight_used: 1
+        balanceWeightUsed: 1
     },
     {
         from: 'USD',
@@ -135,7 +135,7 @@ const configs = [
         sell_coef: 1.022,
         maximum_price_change_percent: 20,
         minimum_balance_used: 100,
-        balance_weight_used: 1
+        balanceWeightUsed: 1
     },
     {
         from: 'USD',
@@ -144,7 +144,7 @@ const configs = [
         sell_coef: 1.028,
         maximum_price_change_percent: 10,
         minimum_balance_used: 100,
-        balance_weight_used: 1
+        balanceWeightUsed: 1
     },
     {
         from: 'USD',
@@ -153,7 +153,7 @@ const configs = [
         sell_coef: 1.028,
         maximum_price_change_percent: 10,
         minimum_balance_used: 100,
-        balance_weight_used: 1
+        balanceWeightUsed: 1
     },
 ];
 function getTradeConfigArray() {

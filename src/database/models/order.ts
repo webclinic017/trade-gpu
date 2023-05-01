@@ -79,7 +79,7 @@ export default class Order extends Model {
     public txid: BigNumber,
     public timestamp: BigNumber,
     public timeout: boolean,
-    public type: string,
+    public type: 'buy' | 'sell',
     public price: BigNumber,
     public amount: BigNumber,
     public pending: BigNumber,

@@ -52,7 +52,7 @@ export class Server {
     this.key = config.key ? fs.readFileSync(config.key) : undefined;
     this.cert = config.cert ? fs.readFileSync(config.cert) : undefined;
 
-    if (!config.https) {
+    if (config.https) {
       this.server = https.createServer(
         { key: this.key, cert: this.cert },
         this.app,
