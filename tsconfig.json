@@ -1,6 +1,7 @@
 {
   "compilerOptions": {
     "declaration": true,
+    "ignoreDeprecations": "5.0",
     "suppressImplicitAnyIndexErrors": true,
     "target": "es6",
     "module": "commonjs",

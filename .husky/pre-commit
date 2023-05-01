@@ -2,5 +2,4 @@
 . "$(dirname "$0")/_/husky.sh"
 
 npx tsc || exit 1
-git add dist
 npx lint-staged
