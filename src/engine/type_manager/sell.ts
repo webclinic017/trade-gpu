@@ -84,6 +84,12 @@ export default class ManageSell extends ManageAbstract<ManageSellConfig> {
           .decimalPlaces(numberDecimalsPrice)
           .toNumber();
         this.log(`amount ? ${amount} / placePrice ? ${placePrice}`);
+
+        if (amount == 0) {
+          this.log(`skipping the order as the amount would be 0`);
+          return false;
+        }
+
         await this.exchange.place_order(
           config.to,
           config.from,

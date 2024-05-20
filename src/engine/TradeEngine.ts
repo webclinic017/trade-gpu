@@ -202,7 +202,10 @@ export default class TradeEngine extends InternalTradeEngine {
         );
         this.log('managed?', managed);
 
-        return managed;
+        // we will try making a buy order
+        if (!!managed) {
+          return managed;
+        }
       }
 
       const managed = await this.manageBuyingOrder(
@@ -238,6 +241,14 @@ export default class TradeEngine extends InternalTradeEngine {
     });
   }
 
+  /**
+   * Manage selling
+   * Note : future implementation would need to return an explicit enum for better understanding
+   * 
+   * @throws Will throw any trading exception. This can be considered failure compared to the return value
+   * 
+   * @returns a flag telling if the sell order management was a success or false if the balance would have been 0
+   */
   private async manageSellingOrder(
     config: TradeConfig,
     configuration: CurrencyLimit,
